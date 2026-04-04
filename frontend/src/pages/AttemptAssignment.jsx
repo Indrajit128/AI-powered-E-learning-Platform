@@ -18,7 +18,7 @@ const AttemptAssignment = () => {
     const fetchAssignment = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:5000/api/student/assignments/batch_0`, { // Adjust batch fetch logic
+        const res = await axios.get(`/api/student/assignments/batch_0`, { // Adjust batch fetch logic
           headers: { 'x-auth-token': token }
         });
         // For demo, we find the assignment with ID from the list
@@ -49,7 +49,7 @@ const AttemptAssignment = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/student/submissions', {
+      await axios.post('/api/student/submissions', {
         assignmentId: id,
         answersJson: answers,
         score: calculatedScore

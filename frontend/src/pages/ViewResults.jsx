@@ -12,7 +12,7 @@ const ViewResults = () => {
     const fetchSubmissions = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:5000/api/faculty/submissions/${id}`, {
+        const res = await axios.get(`/api/faculty/submissions/${id}`, {
           headers: { 'x-auth-token': token }
         });
         setSubmissions(res.data);

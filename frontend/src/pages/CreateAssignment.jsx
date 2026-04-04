@@ -22,7 +22,7 @@ const CreateAssignment = () => {
     const fetchBatches = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/faculty/batches', {
+        const res = await axios.get('/api/faculty/batches', {
           headers: { 'x-auth-token': token }
         });
         setBatches(res.data);
@@ -42,7 +42,7 @@ const CreateAssignment = () => {
     setIsGenerating(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/faculty/generate-assignment', {
+      const res = await axios.post('/api/faculty/generate-assignment', {
         subject: formData.subject,
         type: formData.type,
         level: formData.level
@@ -62,7 +62,7 @@ const CreateAssignment = () => {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/faculty/assignments', {
+      await axios.post('/api/faculty/assignments', {
         ...formData,
         questionsJson: generatedContent
       }, {

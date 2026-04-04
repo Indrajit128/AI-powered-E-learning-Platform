@@ -24,7 +24,7 @@ const FacultyDashboard = () => {
     const fetchBatches = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/faculty/batches', {
+        const res = await axios.get('/api/faculty/batches', {
           headers: { 'x-auth-token': token }
         });
         setBatches(Array.isArray(res.data) ? res.data : []);

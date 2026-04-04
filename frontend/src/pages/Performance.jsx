@@ -25,7 +25,7 @@ const Performance = () => {
     const fetchPerformance = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/student/performance', {
+        const res = await axios.get('/api/student/performance', {
           headers: { 'x-auth-token': token }
         });
         setPerformance(res.data);

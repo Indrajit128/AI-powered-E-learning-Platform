@@ -26,13 +26,13 @@ const CreateBatch = () => {
       const token = localStorage.getItem('token');
       const headers = { 'x-auth-token': token };
       
-      const batchRes = await axios.post('http://localhost:5000/api/faculty/batches', { name }, { headers });
+      const batchRes = await axios.post('/api/faculty/batches', { name }, { headers });
       const batchId = batchRes.data.id;
 
       // Add students
       const studentPromises = emails
         .filter(email => email.trim() !== '')
-        .map(email => axios.post(`http://localhost:5000/api/faculty/batches/${batchId}/students`, { email }, { headers }));
+        .map(email => axios.post(`/api/faculty/batches/${batchId}/students`, { email }, { headers }));
       
       await Promise.all(studentPromises);
       navigate('/faculty');

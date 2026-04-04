@@ -37,15 +37,15 @@ const StudentDashboard = () => {
         const headers = { 'x-auth-token': token };
 
         const [batchesRes, performanceRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/student/batches', { headers }),
-          axios.get('http://localhost:5000/api/student/performance', { headers })
+          axios.get('/api/student/batches', { headers }),
+          axios.get('/api/student/performance', { headers })
         ]);
 
         setBatches(batchesRes.data);
         setPerformance(performanceRes.data);
 
         if (batchesRes.data.length > 0) {
-          const assignmentsRes = await axios.get(`http://localhost:5000/api/student/assignments/${batchesRes.data[0].id}`, { headers });
+          const assignmentsRes = await axios.get(`/api/student/assignments/${batchesRes.data[0].id}`, { headers });
           setAssignments(assignmentsRes.data);
         }
       } catch (err) {
@@ -56,7 +56,8 @@ const StudentDashboard = () => {
     };
     fetchData();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+
     batches.forEach(b => socket.emit('join_batch', b.id));
     
     socket.on('new_assignment', (assignment) => {
