@@ -19,6 +19,12 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.get("/api", (req, res) => {
+  res.json({
+    message: "API is working 🚀"
+  });
+});
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/faculty', require('./routes/faculty'));
 app.use('/api/student', require('./routes/student'));
