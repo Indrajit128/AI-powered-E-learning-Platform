@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, PlusCircle, BarChart2, LogOut, Users } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, BarChart2, LogOut, Users, X } from 'lucide-react';
 
-const Sidebar = ({ user, logout }) => {
+const Sidebar = ({ user, logout, isOpen, setIsOpen }) => {
   const location = useLocation();
   const isFaculty = user.role === 'faculty';
 
@@ -17,18 +17,19 @@ const Sidebar = ({ user, logout }) => {
       ];
 
   return (
-    <div className="sidebar" style={{
-      width: '260px',
-      background: 'white',
-      borderRight: '1px solid var(--border)',
-      padding: '2rem 1rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '2rem'
-    }}>
-      <div className="logo" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)', padding: '0 1rem' }}>
-        LearnAI
-      </div>
+    <>
+      <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(false)}></div>
+      <div className={`sidebar-container ${isOpen ? 'open' : ''}`}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1rem' }}>
+          <div className="logo" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>
+            LearnAI
+          </div>
+          {isOpen && (
+            <button className="mobile-menu-btn" onClick={() => setIsOpen(false)}>
+              <X size={24} />
+            </button>
+          )}
+        </div>
       
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {menuItems.map(item => (
@@ -68,6 +69,7 @@ const Sidebar = ({ user, logout }) => {
         <LogOut size={18} /> Logout
       </button>
     </div>
+    </>
   );
 };
 

@@ -15,6 +15,7 @@ import Navbar from './components/Navbar';
 
 function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     console.log('App State:', { user, url: window.location.href });
@@ -28,11 +29,11 @@ function App() {
 
   return (
     <Router>
-      <div className="app-container" style={{ display: 'flex', minHeight: '100vh' }}>
-        {user && <Sidebar user={user} logout={logout} />}
-        <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {user && <Navbar user={user} />}
-          <div className="page-content" style={{ padding: '2rem', flex: 1 }}>
+      <div className="app-container">
+        {user && <Sidebar user={user} logout={logout} isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />}
+        <div className="main-content">
+          {user && <Navbar user={user} toggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />}
+          <div className="page-content">
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to={user.role === 'faculty' ? '/faculty' : '/student'} />} />

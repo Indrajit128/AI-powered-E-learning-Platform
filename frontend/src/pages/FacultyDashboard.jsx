@@ -48,12 +48,12 @@ const FacultyDashboard = () => {
   return (
     <div className="fade-in" style={{ paddingBottom: '4rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em' }}>Faculty <span className="text-gradient">Command Center</span></h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>Manage your batches and monitor student progress.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="header-actions">
           <Link to="/faculty/create-batch">
             <button className="glass" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', border: '1px solid var(--primary)', fontWeight: '700' }}>
               <Plus size={18} /> Create Batch
@@ -87,7 +87,7 @@ const FacultyDashboard = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '2.5rem' }}>
+      <div className="dashboard-layout faculty">
         {/* Batch Management */}
         <div>
           <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}><Users size={22} color="var(--primary)" /> Active Batches</h3>
@@ -164,7 +164,7 @@ const FacultyDashboard = () => {
               <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={20} color="var(--warning)" /> Quick Actions
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="quick-actions-grid">
                  <ActionBtn icon={<FileText size={18} />} label="Export Grades" />
                  <ActionBtn icon={<Users size={18} />} label="Sync Students" />
                  <ActionBtn icon={<Plus size={18} />} label="Add Resource" />

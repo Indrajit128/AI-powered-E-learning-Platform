@@ -1,26 +1,20 @@
-import { Bell, User, Search } from 'lucide-react';
+import { Bell, User, Search, Menu } from 'lucide-react';
 
-const Navbar = ({ user }) => {
+const Navbar = ({ user, toggleSidebar }) => {
   return (
-    <div className="navbar" style={{
-      height: '70px',
-      background: 'white',
-      borderBottom: '1px solid var(--border)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 2rem',
-      position: 'sticky',
-      top: 0,
-      zIndex: 10
-    }}>
-      <div className="search-bar" style={{ position: 'relative', width: '300px' }}>
-        <Search size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: '#64748b' }} />
-        <input 
-          type="text" 
-          placeholder="Search lessons, assignments..." 
-          style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem' }}
-        />
+    <div className="nav-container">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+        <button className="mobile-menu-btn" onClick={toggleSidebar}>
+          <Menu size={24} />
+        </button>
+        <div className="search-bar">
+          <Search size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: '#64748b' }} />
+          <input 
+            type="text" 
+            placeholder="Search lessons, assignments..." 
+            style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem' }}
+          />
+        </div>
       </div>
 
       <div className="user-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -30,7 +24,7 @@ const Navbar = ({ user }) => {
         </div>
         
         <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-          <div style={{ textAlign: 'right' }}>
+          <div className="user-profile-text" style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{user.name}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user.role}</div>
           </div>

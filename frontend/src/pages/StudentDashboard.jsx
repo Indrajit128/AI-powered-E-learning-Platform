@@ -86,7 +86,7 @@ const StudentDashboard = () => {
   return (
     <div className="fade-in" style={{ paddingBottom: '4rem' }}>
       {/* Header with Stats */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
             Hey, <span className="text-gradient">Ready to Learn?</span>
@@ -96,7 +96,7 @@ const StudentDashboard = () => {
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="header-actions">
            <div className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Flame color="#f97316" fill="#f97316" size={20} />
               <div style={{ fontWeight: '800', fontSize: '1.25rem' }}>12 Day Streak</div>
@@ -125,7 +125,7 @@ const StudentDashboard = () => {
         </div>
       </section>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '2rem' }}>
+      <div className="dashboard-layout">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
           {/* Active Assignments */}
           <div>
