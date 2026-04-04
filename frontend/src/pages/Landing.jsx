@@ -22,23 +22,14 @@ const Landing = () => {
     }}>
       <div className="grid-pattern" style={{ minHeight: '100vh' }}>
         {/* Navigation */}
-        <nav style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          padding: '1.5rem 5%',
-          maxWidth: '1400px',
-          margin: '0 auto',
-          position: 'relative',
-          zIndex: 10
-        }}>
+        <nav className="landing-nav">
           <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em' }}>
             Learn<span style={{ color: 'var(--text-main)' }}>AI</span>
           </div>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <Link to="/login" style={{ textDecoration: 'none', color: 'var(--text-main)', fontWeight: '600' }}>Login</Link>
+          <div className="auth-buttons">
+            <Link to="/login" className="login-link">Login</Link>
             <Link to="/register">
-              <button style={{ padding: '0.75rem 1.5rem', fontWeight: '600', boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)' }}>Get Started Free</button>
+              <button className="get-started-btn">Get Started Free</button>
             </Link>
           </div>
         </nav>

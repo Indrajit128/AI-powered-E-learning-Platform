@@ -322,6 +322,35 @@ button:focus-visible {
   gap: 1rem;
 }
 
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.login-link {
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.get-started-btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+}
+
 /* ======================================================== */
 /* Media Queries                                            */
 /* ======================================================== */
@@ -383,6 +412,20 @@ button:focus-visible {
 
   .user-profile-text {
     display: none;
+  }
+
+  .landing-nav {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .auth-buttons {
+    gap: 1rem;
+  }
+
+  .get-started-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
   }
 }
 
