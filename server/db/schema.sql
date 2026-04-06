@@ -1,11 +1,13 @@
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('faculty', 'student')),
+    password_hash VARCHAR(255),
+    role VARCHAR(50) CHECK (role IN ('faculty', 'student')),
     is_verified BOOLEAN DEFAULT FALSE,
+    otp VARCHAR(6),
+    otp_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

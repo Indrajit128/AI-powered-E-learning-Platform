@@ -11,23 +11,38 @@ const Register = ({ setUser }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return setError('Please use a @gmail.com email address');
-    }
-    
+  const [step, setStep] = useState('form'); // 'form', 'otp'
+  const [otp, setOtp] = useState('');
+
+  const sendOTP = async () => {
     try {
-      const res = await axios.post('/api/auth/register', { name, email, password, role });
+      await axios.post('/api/auth/send-otp', { email, action: 'register' });
+      setStep('otp');
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.msg || 'OTP send failed');
+    }
+  };
+
+  const verifyOTP = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post('/api/auth/verify-otp', { email, otp, name, password, role });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
       navigate(res.data.user.role === 'faculty' ? '/faculty' : '/student');
     } catch (err) {
-      console.error('Registration Error:', err);
-      const msg = err.response?.data?.msg || err.message || 'Registration failed. Is the backend server running?';
-      setError(msg);
+      setError(err.response?.data?.msg || 'Invalid OTP');
     }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return setError('Please use a @gmail.com email address');
+    }
+    sendOTP();
   };
 
   return (
