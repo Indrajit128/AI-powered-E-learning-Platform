@@ -15,6 +15,10 @@ router.post('/register', async (req, res) => {
     }
 
     try {
+        if (!email.toLowerCase().endsWith('@gmail.com')) {
+            return res.status(400).json({ msg: 'Only @gmail.com email addresses are allowed' });
+        }
+        
         const userCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userCheck.rows.length > 0) return res.status(400).json({ msg: 'User already exists' });
 
@@ -46,6 +50,10 @@ router.post('/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ msg: 'Please enter all fields' });
 
     try {
+        if (!email.toLowerCase().endsWith('@gmail.com')) {
+            return res.status(400).json({ msg: 'Only @gmail.com accounts are allowed' });
+        }
+        
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (user.rows.length === 0) return res.status(400).json({ msg: 'Invalid credentials' });
 

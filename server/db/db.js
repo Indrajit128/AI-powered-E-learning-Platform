@@ -122,5 +122,13 @@ async function handleMockQuery(text, params) {
         return { rows: [sub] };
     }
 
+    // Faculty: Get All Students
+    if (queryLower.includes("select id, name, email from users where role = 'student'")) {
+        const students = mockData.users
+            .filter(u => u.role === 'student')
+            .map(u => ({ id: u.id, name: u.name, email: u.email }));
+        return { rows: students };
+    }
+
     return { rows: [] };
 }

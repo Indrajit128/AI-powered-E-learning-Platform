@@ -1,26 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, Mail, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Users, Search, Plus, UserPlus, CheckCircle2, Loader2, X } from 'lucide-react';
 
 const CreateBatch = () => {
   const [name, setName] = useState('');
-  const [emails, setEmails] = useState(['']);
+  const [allStudents, setAllStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleAddEmail = () => setEmails([...emails, '']);
-  const handleRemoveEmail = (idx) => setEmails(emails.filter((_, i) => i !== idx));
-  const handleEmailChange = (idx, val) => {
-    const newEmails = [...emails];
-    newEmails[idx] = val;
-    setEmails(newEmails);
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/faculty/students', {
+          headers: { 'x-auth-token': token }
+        });
+        setAllStudents(res.data);
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Failed to load students list');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  const toggleStudent = (student) => {
+    if (selectedStudents.find(s => s.id === student.id)) {
+      setSelectedStudents(selectedStudents.filter(s => s.id !== student.id));
+    } else {
+      setSelectedStudents([...selectedStudents, student]);
+    }
   };
+
+  const filteredStudents = allStudents.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!name) return setError('Batch name is required');
+    if (selectedStudents.length === 0) return setError('Please select at least one student');
+    
     setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -29,10 +57,10 @@ const CreateBatch = () => {
       const batchRes = await axios.post('/api/faculty/batches', { name }, { headers });
       const batchId = batchRes.data.id;
 
-      // Add students
-      const studentPromises = emails
-        .filter(email => email.trim() !== '')
-        .map(email => axios.post(`/api/faculty/batches/${batchId}/students`, { email }, { headers }));
+      // Add selected students
+      const studentPromises = selectedStudents.map(student => 
+        axios.post(`/api/faculty/batches/${batchId}/students`, { email: student.email }, { headers })
+      );
       
       await Promise.all(studentPromises);
       navigate('/faculty');
@@ -65,33 +93,77 @@ const CreateBatch = () => {
           </div>
 
           <div style={{ marginTop: '2rem' }}>
-            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Add Students (Emails)
-              <button type="button" onClick={handleAddEmail} style={{ padding: '4px 8px', fontSize: '0.75rem', background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)' }}>
-                <Plus size={14} /> Add More
-              </button>
+            <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '1rem', display: 'block' }}>
+              Select Students
             </label>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {emails.map((email, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '8px' }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <Mail size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: '#64748b' }} />
-                    <input 
-                      type="email" 
-                      placeholder="student@email.com" 
-                      value={email} 
-                      onChange={e => handleEmailChange(idx, e.target.value)} 
-                      style={{ paddingLeft: '35px' }}
-                    />
-                  </div>
-                  {emails.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveEmail(idx)} style={{ background: '#fee2e2', color: '#ef4444', padding: '0 12px' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+            {/* Selected Students Chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '1rem' }}>
+              {selectedStudents.map(student => (
+                <div key={student.id} style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--primary-light)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', border: '1px solid var(--primary-border)' }}>
+                  {student.name}
+                  <button type="button" onClick={() => toggleStudent(student)} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', marginLeft: '4px', padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <X size={14} />
+                  </button>
                 </div>
               ))}
+              {selectedStudents.length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>No students selected yet.</span>}
+            </div>
+
+            {/* Search Input */}
+            <div style={{ position: 'relative', marginBottom: '1rem' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
+              <input 
+                type="text" 
+                placeholder="Search by name or email..." 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+                style={{ paddingLeft: '38px', borderRadius: '10px' }}
+              />
+            </div>
+
+            {/* Students List */}
+            <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '10px', background: '#f8fafc' }}>
+              {isLoading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 8px' }} />
+                  <p>Loading students...</p>
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  {searchTerm ? 'No results found' : 'No registered students found'}
+                </div>
+              ) : (
+                filteredStudents.map(student => {
+                  const isSelected = selectedStudents.find(s => s.id === student.id);
+                  return (
+                    <div 
+                      key={student.id} 
+                      onClick={() => toggleStudent(student)}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderBottom: '1px solid var(--border)', 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        background: isSelected ? '#4f46e505' : 'transparent',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: '600', fontSize: '0.95rem', color: isSelected ? 'var(--primary)' : 'var(--text-main)' }}>{student.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                      </div>
+                      {isSelected ? (
+                        <div style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', padding: '2px' }}><CheckCircle2 size={16} /></div>
+                      ) : (
+                        <UserPlus size={18} style={{ color: 'var(--border)' }} />
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

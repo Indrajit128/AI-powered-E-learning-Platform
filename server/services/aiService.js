@@ -10,17 +10,19 @@ const generateAssignment = async (subject, type, level = 'beginner') => {
 
     switch (type) {
         case 'quiz':
-            prompt = `Generate 5 multiple-choice questions on ${subject} at ${level} level. 
+            prompt = `Generate 10 multiple-choice questions on ${subject} at ${level} level. 
             Format the output as a valid JSON array of objects, each with: 
             "question", "options" (array of 4 strings), and "correctAnswer" (string, must match one of the options).`;
             break;
         case 'crossword':
-            prompt = `Generate data for a 5-word crossword puzzle about ${subject}. 
-            Format the output as a valid JSON object with a "words" array. Each word object should have: 
-            "answer" (the word to fill), "clue" (the hint), "row", "col", and "orientation" (horizontal or vertical).`;
+            prompt = `Generate data for a 5-word crossword puzzle about ${subject} (${level} level). 
+            Format the output ONLY as a valid JSON object with a "words" array. Each word object should have: 
+            "answer" (the word to fill, uppercase), "clue" (the hint), "row" (0-9), "col" (0-9), and "orientation" ("across" or "down").
+            Ensure words intersect or at least have valid coordinates on a 10x10 grid.`;
             break;
         case 'coding':
-            prompt = `Generate a programming challenge for ${subject} (C programming). 
+            prompt = `Generate a programming challenge for ${subject} at ${level} level. 
+            The challenge should be solvable in C or Javascript.
             Format the output as a valid JSON object with: 
             "title", "description", "constraints", "initialCode", and "testCases" (array of {input: string, output: string}).`;
             break;

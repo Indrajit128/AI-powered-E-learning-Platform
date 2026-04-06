@@ -42,8 +42,16 @@ const AttemptAssignment = () => {
         if (answers[i] === q.correctAnswer) calculatedScore += 1;
       });
       calculatedScore = (calculatedScore / questions.length) * 100;
+    } else if (assignment.type === 'crossword') {
+      questions.words.forEach((w, i) => {
+        if ((answers[i] || '').toUpperCase() === w.answer.toUpperCase()) calculatedScore += 1;
+      });
+      calculatedScore = (calculatedScore / questions.words.length) * 100;
+    } else if (assignment.type === 'coding') {
+      // For coding, we check if they filled at least something significant
+      const solution = answers[0] || '';
+      calculatedScore = solution.length > 50 ? 100 : 0;
     } else {
-      // Simplistic scoring for other types in this demo
       calculatedScore = 100;
     }
 
@@ -133,30 +141,62 @@ const AttemptAssignment = () => {
               </div>
             )}
 
-            {assignment.type === 'flashcards' && (
-              <div 
-                onClick={() => setAnswers({...answers, [currentIdx]: true})}
-                style={{
-                  height: '300px',
-                  perspective: '1000px',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{
-                  position: 'relative',
-                  width: '100%',
-                  height: '100%',
-                  textAlign: 'center',
-                  transition: 'transform 0.6s',
-                  transformStyle: 'preserve-3d',
-                  transform: answers[currentIdx] ? 'rotateY(180deg)' : 'rotateY(0)'
-                }}>
-                  <div style={{ position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', background: '#f8fafc', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontSize: '1.5rem', fontWeight: '600' }}>
-                    {questions[currentIdx].front}
+            {assignment.type === 'crossword' && (
+              <div>
+                <h3 style={{ marginBottom: '1.5rem' }}>Solve the Crossword Clues</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Enter the correct word for each clue based on the subject: <strong>{assignment.subject}</strong></p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {questions.words.map((word, i) => (
+                    <div key={i} className="input-group">
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                        {i + 1}. {word.clue} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({word.answer.length} letters, {word.orientation})</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="ENTER WORD" 
+                        maxLength={word.answer.length}
+                        value={answers[i] || ''} 
+                        onChange={(e) => setAnswers({...answers, [i]: e.target.value.toUpperCase()})}
+                        style={{ textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700', fontSize: '1.1rem' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {assignment.type === 'coding' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <h3 style={{ marginBottom: '0.5rem' }}>{questions.title}</h3>
+                  <p style={{ marginBottom: '1rem' }}>{questions.description}</p>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    <strong>Constraints:</strong> {questions.constraints}
                   </div>
-                  <div style={{ position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'var(--primary)', color: 'white', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontSize: '1.5rem', fontWeight: '600' }}>
-                    {questions[currentIdx].back}
-                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label style={{ display: 'block', marginBottom: '0.5rem' }}>Write your solution here:</label>
+                  <textarea 
+                    value={answers[0] || questions.initialCode} 
+                    onChange={(e) => setAnswers({...answers, 0: e.target.value})}
+                    style={{ 
+                      minHeight: '300px', 
+                      fontFamily: 'monospace', 
+                      fontSize: '0.9rem', 
+                      lineHeight: '1.6', 
+                      padding: '1rem',
+                      background: '#1e293b',
+                      color: '#f8fafc',
+                      borderRadius: '10px'
+                    }}
+                  />
+                </div>
+
+                <div style={{ background: '#f1f5f9', padding: '1rem', borderRadius: '8px' }}>
+                  <div style={{ fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Example Test Case:</div>
+                  <div style={{ fontSize: '0.8rem' }}><strong>Input:</strong> {questions.testCases[0].input}</div>
+                  <div style={{ fontSize: '0.8rem' }}><strong>Output:</strong> {questions.testCases[0].output}</div>
                 </div>
               </div>
             )}

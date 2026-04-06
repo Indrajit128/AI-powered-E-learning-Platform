@@ -13,6 +13,10 @@ const Register = ({ setUser }) => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return setError('Please use a @gmail.com email address');
+    }
+    
     try {
       const res = await axios.post('/api/auth/register', { name, email, password, role });
       localStorage.setItem('token', res.data.token);

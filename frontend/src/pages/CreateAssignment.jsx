@@ -103,8 +103,8 @@ const CreateAssignment = () => {
           <div className="input-group">
             <label>Subject</label>
             <select value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})}>
-              <option value="Computer Networks">Computer Networks</option>
-              <option value="C Programming">C Programming</option>
+              <option value="Full Stack Development">Full Stack Development</option>
+              <option value="AI Mastery">AI Mastery</option>
             </select>
           </div>
 
@@ -115,8 +115,6 @@ const CreateAssignment = () => {
                 <option value="quiz">Quiz (MCQs)</option>
                 <option value="crossword">Crossword</option>
                 <option value="coding">Coding Challenge</option>
-                <option value="flashcards">Flashcards</option>
-                <option value="fill_blanks">Fill in Blanks</option>
               </select>
             </div>
             <div className="input-group">

@@ -22,6 +22,18 @@ router.post('/batches', auth, facultyOnly, async (req, res) => {
     }
 });
 
+// @route   GET /api/faculty/students
+// @desc    Get all registered students
+router.get('/students', auth, facultyOnly, async (req, res) => {
+    try {
+        const result = await db.query("SELECT id, name, email FROM users WHERE role = 'student'");
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
 // @route   GET /api/faculty/batches
 // @desc    Get all batches for a faculty
 router.get('/batches', auth, facultyOnly, async (req, res) => {

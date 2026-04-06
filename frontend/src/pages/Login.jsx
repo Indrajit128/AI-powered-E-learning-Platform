@@ -11,6 +11,9 @@ const Login = ({ setUser }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return setError('Please use a @gmail.com account');
+    }
     try {
       const res = await axios.post('/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
