@@ -1,15 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/db');
+const supabase = require('../db/db');
 
-// @route   GET /api/students
+// @route   GET /api/batch/students
 // @desc    Get all students
 router.get('/students', async (req, res) => {
     try {
-        const result = await db.query('SELECT id, name, email, email_verified, created_at FROM users WHERE role = $1', ['student']);
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, name, email, email_verified, created_at')
+            .eq('role', 'student');
+
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
-        console.error(err);
+        console.error('Get students error:', err);
         res.status(500).json({ msg: 'Server error retrieving students' });
     }
 });
@@ -24,14 +29,17 @@ router.post('/create', async (req, res) => {
     }
 
     try {
-        const newBatch = await db.query(
-            'INSERT INTO batches (name, course_name, start_date, end_date, faculty_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [name, course_name, start_date, end_date, faculty_id]
-        );
-        res.json({ msg: 'Batch created successfully', batch: newBatch.rows[0] });
+        const { data, error } = await supabase
+            .from('batches')
+            .insert([{ name, course_name, start_date, end_date, faculty_id }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ msg: 'Batch created successfully', batch: data });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ msg: 'Server error creating batch' });
+        console.error('Create batch error:', err);
+        res.status(500).json({ msg: `Server error creating batch: ${err.message}` });
     }
 });
 
@@ -45,19 +53,29 @@ router.post('/add-student', async (req, res) => {
     }
 
     try {
-        const studentAdded = await db.query(
-            'INSERT INTO batch_students (batch_id, student_id) VALUES ($1, $2) ON CONFLICT (batch_id, student_id) DO NOTHING RETURNING *',
-            [batch_id, student_id]
-        );
+        // Check if already in batch
+        const { data: existing } = await supabase
+            .from('batch_students')
+            .select('id')
+            .eq('batch_id', batch_id)
+            .eq('student_id', student_id)
+            .maybeSingle();
 
-        if (studentAdded.rows.length === 0) {
+        if (existing) {
             return res.status(400).json({ msg: 'Student is already in this batch' });
         }
 
-        res.json({ msg: 'Student added to batch successfully', mapping: studentAdded.rows[0] });
+        const { data, error } = await supabase
+            .from('batch_students')
+            .insert([{ batch_id, student_id }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ msg: 'Student added to batch successfully', mapping: data });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ msg: 'Server error adding student to batch' });
+        console.error('Add student error:', err);
+        res.status(500).json({ msg: `Server error: ${err.message}` });
     }
 });
 
@@ -65,11 +83,33 @@ router.post('/add-student', async (req, res) => {
 // @desc    Get batches for a specific faculty
 router.get('/faculty/:faculty_id', async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM batches WHERE faculty_id = $1', [req.params.faculty_id]);
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('batches')
+            .select('*')
+            .eq('faculty_id', req.params.faculty_id);
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        console.error('Get faculty batches error:', err);
+        res.status(500).json({ msg: 'Server error retrieving faculty batches' });
+    }
+});
+
+// @route   GET /api/batch/all
+// @desc    Get all batches
+router.get('/all', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('batches')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: 'Server error retrieving faculty batches' });
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 

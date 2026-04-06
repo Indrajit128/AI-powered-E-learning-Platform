@@ -1,8 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/db');
+const supabase = require('../db/db');
 const { auth, facultyOnly } = require('../middleware/authMiddleware');
 const { generateAssignment } = require('../services/aiService');
+
+// @route   GET /api/faculty/batches
+// @desc    Get all batches for the logged-in faculty
+router.get('/batches', auth, facultyOnly, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('batches')
+            .select('*')
+            .eq('faculty_id', req.user.id);
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
 
 // @route   POST /api/faculty/batches
 // @desc    Create a new batch
@@ -11,11 +27,13 @@ router.post('/batches', auth, facultyOnly, async (req, res) => {
     if (!name) return res.status(400).json({ msg: 'Batch name is required' });
 
     try {
-        const result = await db.query(
-            'INSERT INTO batches (name, faculty_id) VALUES ($1, $2) RETURNING *',
-            [name, req.user.id]
-        );
-        res.json(result.rows[0]);
+        const { data, error } = await supabase
+            .from('batches')
+            .insert([{ name, faculty_id: req.user.id }])
+            .select()
+            .single();
+        if (error) throw error;
+        res.json(data);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -26,20 +44,12 @@ router.post('/batches', auth, facultyOnly, async (req, res) => {
 // @desc    Get all registered students
 router.get('/students', auth, facultyOnly, async (req, res) => {
     try {
-        const result = await db.query("SELECT id, name, email FROM users WHERE role = 'student'");
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
-    }
-});
-
-// @route   GET /api/faculty/batches
-// @desc    Get all batches for a faculty
-router.get('/batches', auth, facultyOnly, async (req, res) => {
-    try {
-        const result = await db.query('SELECT * FROM batches WHERE faculty_id = $1', [req.user.id]);
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, name, email, email_verified, created_at')
+            .eq('role', 'student');
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -53,14 +63,20 @@ router.post('/batches/:id/students', auth, facultyOnly, async (req, res) => {
     const batchId = req.params.id;
 
     try {
-        const user = await db.query('SELECT id FROM users WHERE email = $1 AND role = $2', [email, 'student']);
-        if (user.rows.length === 0) return res.status(404).json({ msg: 'Student not found' });
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .eq('role', 'student')
+            .maybeSingle();
 
-        const studentId = user.rows[0].id;
-        await db.query(
-            'INSERT INTO batch_students (batch_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-            [batchId, studentId]
-        );
+        if (userError || !user) return res.status(404).json({ msg: 'Student not found' });
+
+        const { error } = await supabase
+            .from('batch_students')
+            .insert([{ batch_id: batchId, student_id: user.id }]);
+        
+        if (error && !error.message.includes('duplicate')) throw error;
         res.json({ msg: 'Student added successfully' });
     } catch (err) {
         console.error(err);
@@ -88,17 +104,19 @@ router.post('/assignments', auth, facultyOnly, async (req, res) => {
     const { title, subject, type, batchId, questionsJson } = req.body;
 
     try {
-        const result = await db.query(
-            'INSERT INTO assignments (title, subject, type, batch_id, questions_json) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [title, subject, type, batchId, JSON.stringify(questionsJson)]
-        );
+        const { data, error } = await supabase
+            .from('assignments')
+            .insert([{ title, subject, type, batch_id: batchId, questions_json: questionsJson }])
+            .select()
+            .single();
         
-        // Notify students in the batch via WebSocket (to be implemented in index.js)
+        if (error) throw error;
+
         if (global.io) {
-            global.io.to(`batch_${batchId}`).emit('new_assignment', result.rows[0]);
+            global.io.to(`batch_${batchId}`).emit('new_assignment', data);
         }
 
-        res.json(result.rows[0]);
+        res.json(data);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -109,14 +127,13 @@ router.post('/assignments', auth, facultyOnly, async (req, res) => {
 // @desc    View all submissions for an assignment
 router.get('/submissions/:assignmentId', auth, facultyOnly, async (req, res) => {
     try {
-        const result = await db.query(
-            `SELECT s.*, u.name as student_name, u.email as student_email 
-             FROM submissions s 
-             JOIN users u ON s.student_id = u.id 
-             WHERE s.assignment_id = $1`,
-            [req.params.assignmentId]
-        );
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('submissions')
+            .select('*, users(name, email)')
+            .eq('assignment_id', req.params.assignmentId);
+
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');

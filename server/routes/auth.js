@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../db/db');
+const supabase = require('../db/db');
 const { sendOTP } = require('../services/emailService');
 require('dotenv').config();
 
@@ -15,18 +15,24 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ msg: 'Please enter all fields' });
     }
 
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-        return res.status(400).json({ msg: 'Email format validation failed: Only @gmail.com allowed' });
-    }
-
     if (password.length < 6) {
         return res.status(400).json({ msg: 'Password must be at least 6 characters long' });
     }
 
     try {
         // Check for duplicate email
-        const userExists = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-        if (userExists.rows.length > 0) {
+        const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (fetchError) {
+            console.error('DB fetch error:', fetchError);
+            return res.status(500).json({ msg: 'Database error checking email' });
+        }
+
+        if (existingUser) {
             return res.status(400).json({ msg: 'Email already exists. Cannot register twice.' });
         }
 
@@ -36,20 +42,32 @@ router.post('/register', async (req, res) => {
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        const expiry = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 min
 
-        // Insert User unverified
-        await db.query(
-            'INSERT INTO users (name, email, password_hash, role, email_verified, otp, otp_expires) VALUES ($1, $2, $3, $4, FALSE, $5, $6)',
-            [name, email, passwordHash, role, otp, expiry]
-        );
+        // Insert User as unverified
+        const { error: insertError } = await supabase
+            .from('users')
+            .insert([{
+                name,
+                email,
+                password_hash: passwordHash,
+                role,
+                email_verified: false,
+                otp,
+                otp_expires: expiry
+            }]);
+
+        if (insertError) {
+            console.error('DB insert error:', insertError);
+            return res.status(500).json({ msg: `DB error: ${insertError.message}` });
+        }
 
         // Send OTP email
         await sendOTP(email, otp);
 
         res.json({ msg: 'Registration successful. OTP sent to email.' });
     } catch (err) {
-        console.error(err);
+        console.error('Register error:', err);
         res.status(500).json({ msg: 'Server error during registration' });
     }
 });
@@ -64,25 +82,74 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     try {
-        const user = await db.query(
-            'SELECT id, role FROM users WHERE email = $1 AND otp = $2 AND otp_expires > NOW()',
-            [email, otp]
-        );
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, role, otp_expires')
+            .eq('email', email)
+            .eq('otp', otp)
+            .maybeSingle();
 
-        if (user.rows.length === 0) {
+        if (error || !user) {
             return res.status(400).json({ msg: 'Invalid or expired OTP' });
         }
 
-        const userId = user.rows[0].id;
+        // Check OTP expiry
+        if (new Date(user.otp_expires) < new Date()) {
+            return res.status(400).json({ msg: 'OTP has expired. Please register again.' });
+        }
 
         // Mark as verified
-        await db.query('UPDATE users SET email_verified = true, otp = null WHERE id = $1', [userId]);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ email_verified: true, otp: null, otp_expires: null })
+            .eq('id', user.id);
 
-        const token = jwt.sign({ id: userId, role: user.rows[0].role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.json({ msg: 'Email verified successfully', token });
+        if (updateError) {
+            console.error('Update error:', updateError);
+            return res.status(500).json({ msg: 'Failed to verify email' });
+        }
+
+        // fetch full user for response
+        const { data: fullUser } = await supabase
+            .from('users')
+            .select('id, name, email, role')
+            .eq('id', user.id)
+            .single();
+
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        res.json({ msg: 'Email verified successfully', token, user: fullUser });
     } catch (err) {
-        console.error(err);
+        console.error('OTP verify error:', err);
         res.status(500).json({ msg: 'Verification failed' });
+    }
+});
+
+// @route   POST /api/auth/resend-otp
+// @desc    Resend OTP to existing unverified user
+router.post('/resend-otp', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ msg: 'Email is required' });
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email_verified')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (!user) return res.status(404).json({ msg: 'No account found with this email' });
+        if (user.email_verified) return res.status(400).json({ msg: 'Email already verified. Please login.' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+        await supabase.from('users').update({ otp, otp_expires: expiry }).eq('email', email);
+        await sendOTP(email, otp);
+
+        res.json({ msg: 'New OTP sent to your email' });
+    } catch (err) {
+        console.error('Resend OTP error:', err);
+        res.status(500).json({ msg: 'Failed to resend OTP' });
     }
 });
 
@@ -94,10 +161,15 @@ router.post('/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ msg: 'Please enter all fields' });
 
     try {
-        const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (user.rows.length === 0) return res.status(400).json({ msg: 'Invalid credentials' });
+        const { data: userData, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
 
-        const userData = user.rows[0];
+        if (error || !userData) {
+            return res.status(400).json({ msg: 'Invalid credentials' });
+        }
 
         const isMatch = await bcrypt.compare(password, userData.password_hash);
         if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
@@ -118,7 +190,7 @@ router.post('/login', async (req, res) => {
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error('Login error:', err);
         res.status(500).send('Server error');
     }
 });

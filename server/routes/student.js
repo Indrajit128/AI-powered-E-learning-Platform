@@ -1,17 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/db');
+const supabase = require('../db/db');
 const { auth, studentOnly } = require('../middleware/authMiddleware');
 
 // @route   GET /api/student/batches
 // @desc    Get all batches the student belongs to
 router.get('/batches', auth, studentOnly, async (req, res) => {
     try {
-        const result = await db.query(
-            'SELECT b.* FROM batches b JOIN batch_students bs ON b.id = bs.batch_id WHERE bs.student_id = $1',
-            [req.user.id]
-        );
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('batch_students')
+            .select('batches(*)')
+            .eq('student_id', req.user.id);
+        
+        if (error) throw error;
+        const batches = (data || []).map(row => row.batches).filter(Boolean);
+        res.json(batches);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -22,11 +25,13 @@ router.get('/batches', auth, studentOnly, async (req, res) => {
 // @desc    Get all assignments for a batch
 router.get('/assignments/:batchId', auth, studentOnly, async (req, res) => {
     try {
-        const result = await db.query(
-            'SELECT * FROM assignments WHERE batch_id = $1',
-            [req.params.batchId]
-        );
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('assignments')
+            .select('*')
+            .eq('batch_id', req.params.batchId);
+        
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -39,20 +44,33 @@ router.post('/submissions', auth, studentOnly, async (req, res) => {
     const { assignmentId, answersJson, score } = req.body;
 
     try {
-        const result = await db.query(
-            'INSERT INTO submissions (assignment_id, student_id, answers_json, score) VALUES ($1, $2, $3, $4) RETURNING *',
-            [assignmentId, req.user.id, JSON.stringify(answersJson), score]
-        );
+        const { data, error } = await supabase
+            .from('submissions')
+            .insert([{
+                assignment_id: assignmentId,
+                student_id: req.user.id,
+                answers_json: answersJson,
+                score
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
 
         // Notify faculty via WebSocket
         if (global.io) {
-            const assignment = await db.query('SELECT faculty_id FROM batches b JOIN assignments a ON b.id = a.batch_id WHERE a.id = $1', [assignmentId]);
-            if (assignment.rows.length > 0) {
-                global.io.to(`faculty_${assignment.rows[0].faculty_id}`).emit('new_submission', result.rows[0]);
+            const { data: assignment } = await supabase
+                .from('assignments')
+                .select('batches(faculty_id)')
+                .eq('id', assignmentId)
+                .maybeSingle();
+
+            if (assignment?.batches?.faculty_id) {
+                global.io.to(`faculty_${assignment.batches.faculty_id}`).emit('new_submission', data);
             }
         }
 
-        res.json(result.rows[0]);
+        res.json(data);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -63,14 +81,13 @@ router.post('/submissions', auth, studentOnly, async (req, res) => {
 // @desc    Get all scores for the student
 router.get('/performance', auth, studentOnly, async (req, res) => {
     try {
-        const result = await db.query(
-            `SELECT s.score, s.submitted_at, a.title, a.type, a.subject 
-             FROM submissions s 
-             JOIN assignments a ON s.assignment_id = a.id 
-             WHERE s.student_id = $1`,
-            [req.user.id]
-        );
-        res.json(result.rows);
+        const { data, error } = await supabase
+            .from('submissions')
+            .select('score, submitted_at, assignments(title, type, subject)')
+            .eq('student_id', req.user.id);
+
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');

@@ -1,19 +1,11 @@
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-module.exports = {
-  query: async (text, params) => {
-    try {
-      return await pool.query(text, params);
-    } catch (err) {
-      console.error('Database Query Error:', err.message);
-      throw err;
-    }
-  },
-};
+module.exports = supabase;
 
-console.log('✅ Supabase Postgres DB initialized');
+console.log('✅ Supabase JS client initialized (HTTPS REST mode)');
