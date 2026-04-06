@@ -9,44 +9,131 @@ import {
   BarChart3, 
   CheckCircle, 
   AlertCircle,
-  FileText,
   Activity,
-  Zap
+  Zap,
+  Search,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const FacultyDashboard = () => {
   const [batches, setBatches] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal states
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchForm, setBatchForm] = useState({ name: '', course_name: '', start_date: '', end_date: '' });
+  
+  // Assignment state
+  const [selectedBatchAssign, setSelectedBatchAssign] = useState('');
 
   useEffect(() => {
-    const fetchBatches = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('/api/faculty/batches', {
-          headers: { 'x-auth-token': token }
-        });
-        setBatches(Array.isArray(res.data) ? res.data : []);
+        const headers = { 'x-auth-token': token };
+        
+        // Parallel fetching
+        const [batchesRes, studentsRes] = await Promise.allSettled([
+          axios.get('/api/faculty/batches', { headers }),
+          axios.get('/api/batch/students', { headers })
+        ]);
+
+        if (batchesRes.status === 'fulfilled') setBatches(Array.isArray(batchesRes.value.data) ? batchesRes.value.data : []);
+        if (studentsRes.status === 'fulfilled') setStudents(Array.isArray(studentsRes.value.data) ? studentsRes.value.data : []);
       } catch (err) {
-        setBatches([]);
-        console.error('Error fetching batches:', err);
+        console.error('Error fetching dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchBatches();
+    fetchData();
   }, []);
 
+  const handleCreateBatch = async (e) => {
+    e.preventDefault();
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      // Adding faculty_id manually as a dev mock or ideally from the backend token. 
+      // Providing random UUID for testing purposes if context is missing
+      const reqData = { ...batchForm, faculty_id: user.id || 'f1b9b9b9-1111-1111-1111-111111111111' };
+      
+      const res = await axios.post('http://localhost:5000/api/batch/create', reqData);
+      setBatches([...batches, res.data.batch]);
+      setShowBatchModal(false);
+      setBatchForm({ name: '', course_name: '', start_date: '', end_date: '' });
+      alert(res.data.msg);
+    } catch (err) {
+       alert(err.response?.data?.msg || 'Failed to create batch');
+    }
+  };
+
+  const handleAssignStudent = async (studentId) => {
+    if (!selectedBatchAssign) return alert('Please select a batch top right of the student list to assign.');
+    try {
+      const res = await axios.post('http://localhost:5000/api/batch/add-student', {
+        batch_id: selectedBatchAssign,
+        student_id: studentId
+      });
+      alert(res.data.msg);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to assign student');
+    }
+  };
+
+  const filteredStudents = students.filter(s => 
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const stats = [
-    { label: 'Total Students', value: '124', icon: <Users size={20} />, color: 'var(--primary)' },
-    { label: 'Active Batches', value: (batches || []).length, icon: <BarChart3 size={20} />, color: 'var(--secondary)' },
+    { label: 'Total Students', value: students.length, icon: <Users size={20} />, color: 'var(--primary)' },
+    { label: 'Active Batches', value: batches.length, icon: <BarChart3 size={20} />, color: 'var(--secondary)' },
     { label: 'Avg Grade', value: '78%', icon: <CheckCircle size={20} />, color: 'var(--success)' },
     { label: 'Pending Reviews', value: '12', icon: <AlertCircle size={20} />, color: 'var(--warning)' },
   ];
 
   return (
     <div className="fade-in" style={{ paddingBottom: '4rem' }}>
+      
+      {/* Create Batch Modal */}
+      <AnimatePresence>
+        {showBatchModal && (
+          <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '500px', margin: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0 }}>Create New Batch</h3>
+                <button onClick={() => setShowBatchModal(false)} className="glass" style={{ padding: '8px' }}><X size={18}/></button>
+              </div>
+              <form onSubmit={handleCreateBatch}>
+                <div className="input-group">
+                  <label>Batch Name</label>
+                  <input required placeholder="e.g. CS101 Section A" value={batchForm.name} onChange={(e) => setBatchForm({...batchForm, name: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Course Name</label>
+                  <input required placeholder="e.g. Introduction to Programming" value={batchForm.course_name} onChange={(e) => setBatchForm({...batchForm, course_name: e.target.value})} />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label>Start Date</label>
+                    <input type="date" value={batchForm.start_date} onChange={(e) => setBatchForm({...batchForm, start_date: e.target.value})} />
+                  </div>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label>End Date</label>
+                    <input type="date" value={batchForm.end_date} onChange={(e) => setBatchForm({...batchForm, end_date: e.target.value})} />
+                  </div>
+                </div>
+                <button type="submit" style={{ width: '100%', marginTop: '1rem' }}>Create Batch</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
         <div>
@@ -54,16 +141,9 @@ const FacultyDashboard = () => {
           <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>Manage your batches and monitor student progress.</p>
         </div>
         <div className="header-actions">
-          <Link to="/faculty/create-batch">
-            <button className="glass" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', border: '1px solid var(--primary)', fontWeight: '700' }}>
-              <Plus size={18} /> Create Batch
-            </button>
-          </Link>
-          <Link to="/faculty/create-assignment">
-            <button style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)' }}>
-              <Plus size={18} /> New Assignment
-            </button>
-          </Link>
+           <button onClick={() => setShowBatchModal(true)} className="glass" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', border: '1px solid var(--primary)', fontWeight: '700' }}>
+             <Plus size={18} /> Create Batch Modal
+           </button>
         </div>
       </div>
 
@@ -71,16 +151,10 @@ const FacultyDashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {stats.map((stat, i) => (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            key={i} 
-            className="card stat-card" 
-            style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+            key={i} className="card stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
           >
-            <div style={{ width: '40px', height: '40px', background: `${stat.color}15`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>
-              {stat.icon}
-            </div>
+            <div style={{ width: '40px', height: '40px', background: `${stat.color}15`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>{stat.icon}</div>
             <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>{stat.label}</div>
             <div style={{ fontSize: '1.75rem', fontWeight: '900' }}>{stat.value}</div>
           </motion.div>
@@ -88,115 +162,98 @@ const FacultyDashboard = () => {
       </div>
 
       <div className="dashboard-layout faculty">
-        {/* Batch Management */}
-        <div>
-          <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}><Users size={22} color="var(--primary)" /> Active Batches</h3>
-          {loading ? (
-            <p>Loading your batches...</p>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-              {(!batches || batches.length === 0) ? (
-                <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem' }}>
-                  <Users size={64} style={{ color: 'var(--border)', marginBottom: '1.5rem' }} />
-                  <h3>No batches created yet</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>Start by creating your first batch of students.</p>
-                  <Link to="/faculty/create-batch">
-                    <button style={{ marginTop: '1rem' }}>Create First Batch</button>
-                  </Link>
-                </div>
-              ) : (
-                batches.map((batch, i) => (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    key={batch.id} 
-                    className="card stat-card" 
-                    style={{ borderRadius: '24px' }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                      <div className="glass" style={{ width: '56px', height: '56px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                        <Users size={28} />
-                      </div>
-                      <span className="glass" style={{ fontSize: '0.7rem', padding: '4px 10px', borderRadius: '100px', fontWeight: '800', color: 'var(--text-muted)' }}>ID: {batch.id}</span>
-                    </div>
-                    <div>
-                      <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: '850' }}>{batch.name}</h3>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                          <BookOpen size={16} /> <span>12 Assignments Published</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                          <Clock size={16} /> <span>Full-term Course</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Link to={`/faculty/results/${batch.id}`} style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        Performance Report <ChevronRight size={18} />
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-          )}
+        {/* Main Content Area */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* Batches Section */}
+          <div>
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}><Users size={22} color="var(--primary)" /> Active Batches</h3>
+            {loading ? <p>Loading your batches...</p> : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {batches.length === 0 ? (
+                  <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem' }}>
+                    <p style={{ color: 'var(--text-muted)' }}>No batches created yet. Start by creating your first batch.</p>
+                  </div>
+                ) : (
+                  batches.map((batch, i) => (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={batch.id} className="card stat-card" style={{ borderRadius: '24px' }}>
+                      <h3 style={{ fontSize: '1.25rem' }}>{batch.name}</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{batch.course_name}</p>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Student Directory & Assignment Section */}
+          <div className="card">
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={20} color="var(--primary)"/> Student Directory</h3>
+               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                 <div style={{ position: 'relative' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
+                    <input type="text" placeholder="Search student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ paddingLeft: '35px', paddingRight: '15px', paddingBottom: '8px', paddingTop: '8px', borderRadius: '8px', border: '1px solid var(--border)' }} />
+                 </div>
+                 <select value={selectedBatchAssign} onChange={(e) => setSelectedBatchAssign(e.target.value)} style={{ padding: '8px 15px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                     <option value="">Select Batch to Assign</option>
+                     {batches.map(b => (
+                       <option key={b.id} value={b.id}>{b.name}</option>
+                     ))}
+                 </select>
+               </div>
+             </div>
+
+             {loading ? <p>Loading students...</p> : (
+               <div style={{ overflowX: 'auto' }}>
+                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                   <thead>
+                     <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                       <th style={{ padding: '1rem' }}>Name</th>
+                       <th style={{ padding: '1rem' }}>Email</th>
+                       <th style={{ padding: '1rem' }}>Status</th>
+                       <th style={{ padding: '1rem', textAlign: 'right' }}>Action</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {filteredStudents.length === 0 ? (
+                       <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No students found</td></tr>
+                     ) : (
+                       filteredStudents.map(student => (
+                         <tr key={student.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                           <td style={{ padding: '1rem', fontWeight: '500' }}>{student.name}</td>
+                           <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{student.email}</td>
+                           <td style={{ padding: '1rem' }}>
+                             <span className="glass" style={{ color: student.email_verified ? 'var(--success)' : 'var(--warning)', fontSize: '0.8rem', padding: '4px 8px', borderRadius: '12px' }}>
+                               {student.email_verified ? 'Verified' : 'Pending'}
+                             </span>
+                           </td>
+                           <td style={{ padding: '1rem', textAlign: 'right' }}>
+                              <button onClick={() => handleAssignStudent(student.id)} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>+ Assign</button>
+                           </td>
+                         </tr>
+                       ))
+                     )}
+                   </tbody>
+                 </table>
+               </div>
+             )}
+          </div>
+
         </div>
 
         {/* Sidebar Modules */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-           {/* Recent Submissions Feed */}
            <div className="card" style={{ padding: '1.5rem' }}>
               <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={20} color="var(--primary)" /> Recent Submissions
+                <Activity size={20} color="var(--primary)" /> Recent Activity
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                 <SubmissionItem name="Rahul Sharma" assignment="Network Quiz #3" time="10 mins ago" score="95%" />
-                 <SubmissionItem name="Ananya Iyer" assignment="Binary Tree Lab" time="45 mins ago" score="88%" />
-                 <SubmissionItem name="Vikram Singh" assignment="Network Quiz #3" time="2 hours ago" score="72%" />
-                 <SubmissionItem name="Sneha Patel" assignment="API Documentation" time="5 hours ago" score="100%" />
-              </div>
-              <button className="glass" style={{ width: '100%', marginTop: '1.5rem', fontSize: '0.875rem', fontWeight: '700' }}>View All Activity</button>
-           </div>
-
-           {/* Quick Action Hub */}
-           <div className="card" style={{ background: 'var(--text-main)', color: 'white' }}>
-              <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Zap size={20} color="var(--warning)" /> Quick Actions
-              </h3>
-              <div className="quick-actions-grid">
-                 <ActionBtn icon={<FileText size={18} />} label="Export Grades" />
-                 <ActionBtn icon={<Users size={18} />} label="Sync Students" />
-                 <ActionBtn icon={<Plus size={18} />} label="Add Resource" />
-                 <ActionBtn icon={<Activity size={18} />} label="Run Audit" />
-              </div>
+              <p style={{color: 'var(--text-muted)'}}>No recent activity to display.</p>
            </div>
         </div>
       </div>
     </div>
   );
 };
-
-const SubmissionItem = ({ name, assignment, time, score }) => (
-  <div className="activity-item" style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '1.25rem', paddingBottom: '1.25rem' }}>
-    <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{name}</div>
-    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{assignment} • {time}</div>
-    <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--success)' }}>Score: {score}</div>
-  </div>
-);
-
-const ActionBtn = ({ icon, label }) => (
-  <div style={{ 
-    background: 'rgba(255, 255, 255, 0.1)', 
-    padding: '1rem', 
-    borderRadius: '12px', 
-    textAlign: 'center', 
-    cursor: 'pointer',
-    transition: 'background 0.2s'
-  }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'} onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}>
-    <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>{icon}</div>
-    <div style={{ fontSize: '0.75rem', fontWeight: '600' }}>{label}</div>
-  </div>
-);
 
 export default FacultyDashboard;

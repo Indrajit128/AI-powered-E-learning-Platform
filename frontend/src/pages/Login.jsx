@@ -19,7 +19,8 @@ const Login = ({ setUser }) => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
-      navigate(res.data.user.role === 'faculty' ? '/faculty' : '/student');
+      const targetRoute = res.data.user.role === 'admin' ? '/admin' : res.data.user.role === 'faculty' ? '/faculty' : '/student';
+      navigate(targetRoute);
     } catch (err) {
       setError(err.response?.data?.msg || 'Login failed');
     }
@@ -29,7 +30,7 @@ const Login = ({ setUser }) => {
     <div className="fade-in" style={{ maxWidth: '400px', margin: '100px auto' }}>
       <div className="card">
         <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Login to Platform</h2>
-        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div style={{ color: '#ef4444', marginBottom: '1rem', background: '#fee2e2', padding: '0.8rem', borderRadius: '8px' }}>{error}</div>}
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Email Address</label>

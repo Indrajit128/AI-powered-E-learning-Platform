@@ -32,6 +32,7 @@ app.get("/api", (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/faculty', require('./routes/faculty'));
 app.use('/api/student', require('./routes/student'));
+app.use('/api/batch', require('./routes/batch'));
 
 // Socket.io Connection
 io.on('connection', (socket) => {
