@@ -20,20 +20,20 @@ router.post('/register', async (req, res) => {
     }
 
     try {
-        // Check for duplicate email
+        // Check for duplicate email and verification status
         const { data: existingUser, error: fetchError } = await supabase
             .from('users')
-            .select('id')
+            .select('id, email_verified')
             .eq('email', email)
             .maybeSingle();
 
         if (fetchError) {
             console.error('DB fetch error:', fetchError);
-            return res.status(500).json({ msg: 'Database error checking email' });
+            return res.status(500).json({ msg: 'Database error checking account status' });
         }
 
-        if (existingUser) {
-            return res.status(400).json({ msg: 'Email already exists. Cannot register twice.' });
+        if (existingUser && existingUser.email_verified) {
+            return res.status(400).json({ msg: 'Email already exists and is verified. Please login.' });
         }
 
         // Hash password
@@ -42,25 +42,40 @@ router.post('/register', async (req, res) => {
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        // Use a Date object for insert, so supabase-js handles formatting
         const expiry = new Date(Date.now() + 30 * 60 * 1000); // 30 min
 
-        // Insert User as unverified
-        const { error: insertError } = await supabase
-            .from('users')
-            .insert([{
-                name,
-                email,
-                password_hash: passwordHash,
-                role,
-                email_verified: false,
-                otp,
-                otp_expires: expiry
-            }]);
+        let result;
+        if (existingUser) {
+            // Update unverified user
+            result = await supabase
+                .from('users')
+                .update({
+                    name,
+                    password_hash: passwordHash,
+                    role,
+                    otp,
+                    otp_expires: expiry,
+                    email_verified: false // ensure it stays false
+                })
+                .eq('email', email);
+        } else {
+            // Insert new user
+            result = await supabase
+                .from('users')
+                .insert([{
+                    name,
+                    email,
+                    password_hash: passwordHash,
+                    role,
+                    email_verified: false,
+                    otp,
+                    otp_expires: expiry
+                }]);
+        }
 
-        if (insertError) {
-            console.error('DB insert error:', insertError);
-            return res.status(500).json({ msg: `DB error: ${insertError.message}` });
+        if (result.error) {
+            console.error('DB save error:', result.error);
+            return res.status(500).json({ msg: `Database error: ${result.error.message}` });
         }
 
         // Send OTP email
@@ -94,12 +109,18 @@ router.post('/verify-otp', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid or expired OTP' });
         }
 
-        // Check OTP expiry (Supabase returns ISO string, new Date handles it)
-        const expiryDate = new Date(user.otp_expires);
+        // Check OTP expiry (Use numeric comparison for robustness against timezone drift)
+        // If Supabase returns a string without Z, we treat it as UTC to match how we sent it
+        let expiryStr = user.otp_expires;
+        if (expiryStr && !expiryStr.endsWith('Z') && !expiryStr.includes('+')) {
+            expiryStr += 'Z';
+        }
+        
+        const expiryDate = new Date(expiryStr);
         const now = new Date();
         
-        if (expiryDate < now) {
-            return res.status(400).json({ msg: 'OTP has expired. Please register again.' });
+        if (isNaN(expiryDate.getTime()) || expiryDate < now) {
+            return res.status(400).json({ msg: 'OTP has expired. Please try registering again or resend the code.' });
         }
 
         // Mark as verified

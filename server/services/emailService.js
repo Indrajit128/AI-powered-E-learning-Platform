@@ -24,7 +24,7 @@ const sendOTP = async (email, otp) => {
         </div>
         <div style="padding: 40px 32px;">
           <h2 style="color: #1e293b; margin: 0 0 16px 0;">Email Verification</h2>
-          <p style="color: #64748b; margin: 0 0 24px 0;">Enter the code below to verify your account. This code expires in <strong>15 minutes</strong>.</p>
+          <p style="color: #64748b; margin: 0 0 24px 0;">Enter the code below to verify your account. This code expires in <strong>30 minutes</strong>.</p>
           <div style="background: #4f46e5; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
             <span style="color: white; font-size: 40px; font-weight: 900; letter-spacing: 12px;">${otp}</span>
           </div>
