@@ -19,6 +19,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.get("/", (req, res) => {
+    res.send("Welcome to AI-Powered E-Learning Backend 🎓");
+});
+
 app.get("/api", (req, res) => {
   res.json({
     message: "API is working 🚀"
