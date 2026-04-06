@@ -5,14 +5,25 @@ const Sidebar = ({ user, logout, isOpen, setIsOpen }) => {
   const location = useLocation();
   const isFaculty = user.role === 'faculty';
 
-  const menuItems = isFaculty 
+  const menuItems = user.role === 'admin'
+    ? [
+        { name: 'Admin Dashboard', path: '/admin', icon: <Home size={20} /> },
+        { name: 'Admissions', path: '/admin/admissions', icon: <Users size={20} /> },
+        { name: 'Fee Management', path: '/admin/fees', icon: <BarChart2 size={20} /> },
+        { name: 'Staff Profiles', path: '/admin/staff', icon: <Users size={20} /> },
+      ]
+    : isFaculty 
     ? [
         { name: 'Dashboard', path: '/faculty', icon: <Home size={20} /> },
         { name: 'Create Batch', path: '/faculty/create-batch', icon: <Users size={20} /> },
+        { name: 'Attendance', path: '/faculty/attendance', icon: <BarChart2 size={20} /> },
         { name: 'New Assignment', path: '/faculty/create-assignment', icon: <PlusCircle size={20} /> },
       ]
     : [
         { name: 'Dashboard', path: '/student', icon: <Home size={20} /> },
+        { name: 'Coding Challenges', path: '/student/coding', icon: <PlusCircle size={20} /> },
+        { name: 'Online Quizzes', path: '/student/quizzes', icon: <BookOpen size={20} /> },
+        { name: 'Practice Assignments', path: '/student/practice', icon: <PlusCircle size={20} /> },
         { name: 'My Performance', path: '/student/performance', icon: <BarChart2 size={20} /> },
       ];
 

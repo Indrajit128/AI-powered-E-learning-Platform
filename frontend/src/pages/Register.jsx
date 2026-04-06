@@ -31,7 +31,8 @@ const Register = ({ setUser }) => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
-      navigate(res.data.user.role === 'faculty' ? '/faculty' : '/student');
+      const targetRoute = res.data.user.role === 'admin' ? '/admin' : res.data.user.role === 'faculty' ? '/faculty' : '/student';
+      navigate(targetRoute);
     } catch (err) {
       setError(err.response?.data?.msg || 'Invalid OTP');
     }
@@ -95,16 +96,17 @@ const Register = ({ setUser }) => {
           </div>
           <div className="input-group">
             <label>Join As</label>
-            <div style={{ position: 'relative' }}>
-              <UserCircle size={18} style={{ position: 'absolute', left: '10px', top: '12px', color: '#64748b' }} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <UserCircle size={18} style={{ position: 'absolute', left: '10px', color: '#64748b' }} />
               <select 
                 value={role} 
                 onChange={(e) => setRole(e.target.value)} 
                 required 
-                style={{ paddingLeft: '40px' }}
+                style={{ paddingLeft: '40px', width: '100%' }}
               >
                 <option value="student">Student</option>
                 <option value="faculty">Faculty</option>
+                <option value="admin">Administrator (ERP)</option>
               </select>
             </div>
           </div>

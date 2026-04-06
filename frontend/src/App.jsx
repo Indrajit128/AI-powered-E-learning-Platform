@@ -8,10 +8,22 @@ import StudentDashboard from './pages/StudentDashboard';
 import CreateBatch from './pages/CreateBatch';
 import CreateAssignment from './pages/CreateAssignment';
 import AttemptAssignment from './pages/AttemptAssignment';
-import ViewResults from './pages/ViewResults';
-import Performance from './pages/Performance';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
+
+// New Project Pages
+import CodingChallenges from './pages/CodingChallenges';
+import OnlineQuizzes from './pages/OnlineQuizzes';
+import PracticeAssignments from './pages/PracticeAssignments';
+import ViewResults from './pages/ViewResults';
+import Performance from './pages/Performance';
+
+// ERP Admin Pages
+const AdminDashboard = () => <div className="card"><h2>Admin Dashboard</h2><p>Overview of institution stats, admissions, and financials.</p></div>;
+const Admissions = () => <div className="card"><h2>Admissions Management</h2><p>Review and approve new student applications.</p></div>;
+const FeeManagement = () => <div className="card"><h2>Fee Management</h2><p>Track fee structures and student payments.</p></div>;
+const StaffProfiles = () => <div className="card"><h2>Staff & HR</h2><p>Manage faculty and administrative staff details.</p></div>;
+const AttendanceTracker = () => <div className="card"><h2>Attendance Tracker</h2><p>Monitor student and staff attendance.</p></div>;
 
 function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
@@ -36,16 +48,27 @@ function App() {
           <div className="page-content">
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to={user.role === 'faculty' ? '/faculty' : '/student'} />} />
-              <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to={user.role === 'faculty' ? '/faculty' : '/student'} />} />
+              <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} />} />
+              <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} />} />
               
+              {/* Admin ERP Routes */}
+              <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" />} />
+              <Route path="/admin/admissions" element={user?.role === 'admin' ? <Admissions /> : <Navigate to="/login" />} />
+              <Route path="/admin/fees" element={user?.role === 'admin' ? <FeeManagement /> : <Navigate to="/login" />} />
+              <Route path="/admin/staff" element={user?.role === 'admin' ? <StaffProfiles /> : <Navigate to="/login" />} />
+
               {/* Faculty Routes */}
               <Route path="/faculty" element={user?.role === 'faculty' ? <FacultyDashboard /> : <Navigate to="/login" />} />
+              <Route path="/faculty/attendance" element={user?.role === 'faculty' ? <AttendanceTracker /> : <Navigate to="/login" />} />
               <Route path="/faculty/create-batch" element={user?.role === 'faculty' ? <CreateBatch /> : <Navigate to="/login" />} />
               <Route path="/faculty/create-assignment" element={user?.role === 'faculty' ? <CreateAssignment /> : <Navigate to="/login" />} />
               <Route path="/faculty/results/:id" element={user?.role === 'faculty' ? <ViewResults /> : <Navigate to="/login" />} />
 
+              {/* Student Routes */}
               <Route path="/student" element={user?.role === 'student' ? <StudentDashboard /> : <Navigate to="/login" />} />
+              <Route path="/student/coding" element={user?.role === 'student' ? <CodingChallenges /> : <Navigate to="/login" />} />
+              <Route path="/student/quizzes" element={user?.role === 'student' ? <OnlineQuizzes /> : <Navigate to="/login" />} />
+              <Route path="/student/practice" element={user?.role === 'student' ? <PracticeAssignments /> : <Navigate to="/login" />} />
               <Route path="/student/performance" element={user?.role === 'student' ? <Performance /> : <Navigate to="/login" />} />
               <Route path="/student/attempt/:id" element={user?.role === 'student' ? <AttemptAssignment /> : <Navigate to="/login" />} />
 

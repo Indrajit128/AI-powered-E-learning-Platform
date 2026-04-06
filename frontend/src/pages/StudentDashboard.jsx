@@ -127,13 +127,35 @@ const StudentDashboard = () => {
 
       <div className="dashboard-layout">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {/* Learning Hub Quick Links */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <Link to="/student/coding" style={{ textDecoration: 'none' }}>
+              <div className="card stat-card" style={{ textAlign: 'center', padding: '1.25rem', borderColor: 'var(--primary)', background: '#4f46e505' }}>
+                <Code size={24} color="var(--primary)" style={{ marginBottom: '0.5rem' }} />
+                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Coding Hub</div>
+              </div>
+            </Link>
+            <Link to="/student/quizzes" style={{ textDecoration: 'none' }}>
+              <div className="card stat-card" style={{ textAlign: 'center', padding: '1.25rem', borderColor: '#ec4899', background: '#ec489905' }}>
+                <Zap size={24} color="#ec4899" style={{ marginBottom: '0.5rem' }} />
+                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Quiz Center</div>
+              </div>
+            </Link>
+            <Link to="/student/practice" style={{ textDecoration: 'none' }}>
+              <div className="card stat-card" style={{ textAlign: 'center', padding: '1.25rem', borderColor: 'var(--secondary)', background: '#10b98105' }}>
+                <Target size={24} color="var(--secondary)" style={{ marginBottom: '0.5rem' }} />
+                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Practice Lab</div>
+              </div>
+            </Link>
+          </div>
+
           {/* Active Assignments */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BookOpen size={20} color="var(--primary)" /> Active Assignments
+                <BookOpen size={20} color="var(--primary)" /> Top Priority Tasks
               </h3>
-              <Link to="#" style={{ fontSize: '0.875rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>View All</Link>
+              <Link to="/student/quizzes" style={{ fontSize: '0.875rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>Explore All</Link>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -142,10 +164,10 @@ const StudentDashboard = () => {
               ) : assignments.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '4rem' }}>
                   <Clock size={48} style={{ color: 'var(--border)', marginBottom: '1rem' }} />
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>All caught up! Why not explore a new topic?</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>All caught up! Head to the hubs for more practice.</p>
                 </div>
               ) : (
-                assignments.map((assign, i) => (
+                assignments.slice(0, 3).map((assign, i) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -155,8 +177,8 @@ const StudentDashboard = () => {
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '20px' }}
                   >
                     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                      <div className="glass" style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                        {assign.type === 'quiz' ? <Zap size={26} /> : <BookOpen size={26} />}
+                      <div className="glass" style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: assign.type === 'coding' ? 'var(--primary)' : assign.type === 'quiz' ? '#ec4899' : 'var(--secondary)' }}>
+                        {assign.type === 'quiz' ? <Zap size={26} /> : assign.type === 'coding' ? <Code size={26} /> : <BookOpen size={26} />}
                       </div>
                       <div>
                         <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.1rem' }}>{assign.title}</h4>
@@ -169,7 +191,7 @@ const StudentDashboard = () => {
                     </div>
                     <Link to={`/student/attempt/${assign.id}`}>
                       <button style={{ borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.25rem', fontWeight: '700' }}>
-                        Start <PlayCircle size={18} />
+                        Play <PlayCircle size={18} />
                       </button>
                     </Link>
                   </motion.div>
