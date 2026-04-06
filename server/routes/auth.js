@@ -42,7 +42,8 @@ router.post('/register', async (req, res) => {
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiry = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 min
+        // Use a Date object for insert, so supabase-js handles formatting
+        const expiry = new Date(Date.now() + 30 * 60 * 1000); // 30 min
 
         // Insert User as unverified
         const { error: insertError } = await supabase
@@ -93,8 +94,11 @@ router.post('/verify-otp', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid or expired OTP' });
         }
 
-        // Check OTP expiry
-        if (new Date(user.otp_expires) < new Date()) {
+        // Check OTP expiry (Supabase returns ISO string, new Date handles it)
+        const expiryDate = new Date(user.otp_expires);
+        const now = new Date();
+        
+        if (expiryDate < now) {
             return res.status(400).json({ msg: 'OTP has expired. Please register again.' });
         }
 
@@ -141,7 +145,7 @@ router.post('/resend-otp', async (req, res) => {
         if (user.email_verified) return res.status(400).json({ msg: 'Email already verified. Please login.' });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiry = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        const expiry = new Date(Date.now() + 30 * 60 * 1000);
 
         await supabase.from('users').update({ otp, otp_expires: expiry }).eq('email', email);
         await sendOTP(email, otp);

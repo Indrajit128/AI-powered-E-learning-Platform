@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(50) CHECK (role IN ('admin', 'faculty', 'student')),
     email_verified BOOLEAN DEFAULT FALSE,
     otp VARCHAR(6),
-    otp_expires TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    otp_expires TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Staff Profiles (HR)
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS staff_profiles (
     salary DECIMAL(10, 2),
     phone VARCHAR(20),
     address TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Batches Table
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS batches (
     course_name VARCHAR(255),
     start_date DATE,
     end_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Batch Students Mapping Table
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS batch_students (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
     student_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    enrollment_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(batch_id, student_id)
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS admissions (
     course_interested VARCHAR(255),
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'enrolled')),
     documents_json JSONB,
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    applied_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     processed_by UUID REFERENCES users(id)
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     status VARCHAR(20) CHECK (status IN ('present', 'absent', 'late', 'excused')),
     remark TEXT,
     recorded_by UUID REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(batch_id, student_id, date)
 );
 
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS fee_structures (
     due_date DATE,
     description TEXT,
     batch_id UUID REFERENCES batches(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Student Fee Payments
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS fee_payments (
     amount_paid DECIMAL(10, 2) NOT NULL,
     payment_method VARCHAR(50),
     transaction_id VARCHAR(100),
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50) DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed')),
     receipt_no VARCHAR(50) UNIQUE
 );
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS timetables (
     end_time TIME,
     room_no VARCHAR(50),
     faculty_id UUID REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Assignments Table
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     type VARCHAR(20) NOT NULL CHECK (type IN ('quiz', 'crossword', 'coding', 'flashcards', 'fill_blanks')),
     batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
     questions_json JSONB NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Submissions Table
@@ -141,5 +141,5 @@ CREATE TABLE IF NOT EXISTS submissions (
     student_id UUID REFERENCES users(id) ON DELETE CASCADE,
     answers_json JSONB NOT NULL,
     score DECIMAL(5, 2),
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    submitted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
