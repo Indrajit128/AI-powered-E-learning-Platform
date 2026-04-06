@@ -11,7 +11,8 @@ import {
   Zap, 
   Calendar,
   ChevronRight,
-  Flame
+  Flame,
+  Code
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
