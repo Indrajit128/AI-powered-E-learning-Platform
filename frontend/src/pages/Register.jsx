@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, UserCircle } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 const Register = ({ setUser }) => {
   const [name, setName] = useState('');
@@ -11,39 +12,35 @@ const Register = ({ setUser }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [step, setStep] = useState('form'); // 'form', 'otp'
-  const [otp, setOtp] = useState('');
-
-  const sendOTP = async () => {
-    try {
-      await axios.post('/api/auth/send-otp', { email, action: 'register' });
-      setStep('otp');
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.msg || 'OTP send failed');
-    }
-  };
-
-  const verifyOTP = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post('/api/auth/verify-otp', { email, otp, name, password, role });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      const targetRoute = res.data.user.role === 'admin' ? '/admin' : res.data.user.role === 'faculty' ? '/faculty' : '/student';
-      navigate(targetRoute);
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Invalid OTP');
-    }
-  };
-
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!email.toLowerCase().endsWith('@gmail.com')) {
       return setError('Please use a @gmail.com email address');
     }
-    sendOTP();
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
+
+      if (error) throw error;
+
+      if (data.session || data.user) {
+        // Set user object corresponding to what App.jsx expects locally
+        const mockUser = { name, email, role };
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('token', data.session?.access_token || 'supabase-temp-token');
+        setUser(mockUser);
+        
+        const targetRoute = role === 'admin' ? '/admin' : role === 'faculty' ? '/faculty' : '/student';
+        navigate(targetRoute);
+      } else {
+        setError('Registration succeeded, please check your email.');
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+    }
   };
 
   return (
