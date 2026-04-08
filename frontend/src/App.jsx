@@ -19,6 +19,7 @@ import ViewResults from './pages/ViewResults';
 import Performance from './pages/Performance';
 import ChallengeDetails from './pages/ChallengeDetails';
 import FacultyChallenges from './pages/FacultyChallenges';
+import QuizAttempt from './pages/QuizAttempt';
 
 // ERP Admin Pages
 const AdminDashboard = () => <div className="card"><h2>Admin Dashboard</h2><p>Overview of institution stats, admissions, and financials.</p></div>;
@@ -74,6 +75,7 @@ function App() {
               <Route path="/student/practice" element={user?.role === 'student' ? <PracticeAssignments /> : <Navigate to="/login" />} />
               <Route path="/student/performance" element={user?.role === 'student' ? <Performance /> : <Navigate to="/login" />} />
               <Route path="/student/coding-challenge/:id" element={user?.role === 'student' ? <ChallengeDetails /> : <Navigate to="/login" />} />
+              <Route path="/student/quiz/:id" element={user?.role === 'student' ? <QuizAttempt /> : <Navigate to="/login" />} />
               <Route path="/student/attempt/:id" element={user?.role === 'student' ? <AttemptAssignment /> : <Navigate to="/login" />} />
 
               {/* Default Redirect */}

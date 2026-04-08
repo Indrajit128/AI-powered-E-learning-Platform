@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Search, Filter, Code, Info, CheckCircle, Database, Layout, BookOpen, User, Zap, Star, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChallengeCard from '../components/ChallengeCard';
+import { supabase } from '../services/supabase';
 
 const CodingChallenges = () => {
     const [challenges, setChallenges] = useState([]);
@@ -11,6 +12,7 @@ const CodingChallenges = () => {
     const [difficulty, setDifficulty] = useState('All');
     const [topic, setTopic] = useState('All');
     const [stats, setStats] = useState({ solved: 0, attempted: 0, points: 0, accuracy: 0 });
+    const [notification, setNotification] = useState(null);
 
     const topics = ['All', 'Arrays', 'Strings', 'Recursion', 'Dynamic Programming', 'Graph', 'Stack', 'Queue', 'Binary Tree', 'Linked List', 'Searching', 'Sorting', 'Hashing', 'Greedy Algorithm', 'Sliding Window', 'Two Pointer'];
     const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
@@ -36,7 +38,30 @@ const CodingChallenges = () => {
                 setLoading(false);
             }
         };
+
         fetchChallenges();
+
+        // Real-time Subscriptions
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && supabase) {
+            const channel = supabase
+                .channel('realtime_submissions')
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'challenge_submissions', filter: `user_id=eq.${user.id}` },
+                    (payload) => {
+                        console.log('Real-time submission detected:', payload);
+                        setNotification('New submission detected! Updating stats...');
+                        setTimeout(() => setNotification(null), 3000);
+                        fetchChallenges(); 
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        }
     }, []);
 
     const filteredChallenges = useMemo(() => {
@@ -50,6 +75,34 @@ const CodingChallenges = () => {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
+            {/* Real-time Notification Toast */}
+            <AnimatePresence>
+                {notification && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        style={{ 
+                            position: 'fixed', 
+                            bottom: '2rem', 
+                            right: '2rem', 
+                            background: '#10b981', 
+                            color: 'white', 
+                            padding: '1rem 1.5rem', 
+                            borderRadius: '12px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px',
+                            zIndex: 1000,
+                            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)'
+                        }}
+                    >
+                        <Zap size={18} />
+                        <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>{notification}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Premium Hero Section */}
             <div className="animate-mesh grid-pattern" style={{ 
                 padding: '4rem 2rem 6rem', 

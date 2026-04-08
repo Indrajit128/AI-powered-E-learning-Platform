@@ -35,6 +35,7 @@ app.use('/api/student', require('./routes/student'));
 app.use('/api/batch', require('./routes/batch'));
 app.use('/api/challenges', require('./routes/challenges'));
 app.use('/api/submissions', require('./routes/submissions'));
+app.use('/api/quizzes', require('./routes/quizzes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/code', require('./routes/codeRoutes'));
 

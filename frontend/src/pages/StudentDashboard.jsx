@@ -30,6 +30,7 @@ const StudentDashboard = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [performance, setPerformance] = useState([]);
+  const [quizAttempts, setQuizAttempts] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,13 +38,15 @@ const StudentDashboard = () => {
         const token = localStorage.getItem('token');
         const headers = { 'x-auth-token': token };
 
-        const [batchesRes, performanceRes] = await Promise.all([
+        const [batchesRes, performanceRes, quizzesRes] = await Promise.all([
           axios.get('/api/student/batches', { headers }),
-          axios.get('/api/student/performance', { headers })
+          axios.get('/api/student/performance', { headers }),
+          axios.get('/api/quizzes/student/analytics', { headers })
         ]);
 
         setBatches(batchesRes.data);
         setPerformance(performanceRes.data);
+        setQuizAttempts(quizzesRes.data);
 
         if (batchesRes.data.length > 0) {
           const assignmentsRes = await axios.get(`/api/student/assignments/${batchesRes.data[0].id}`, { headers });
@@ -97,7 +100,11 @@ const StudentDashboard = () => {
           </p>
         </div>
         
-        <div className="header-actions">
+        <div className="header-actions" style={{ display: 'flex', gap: '1rem' }}>
+           <div className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Trophy color="#f59e0b" size={20} />
+              <div style={{ fontWeight: '800', fontSize: '1.25rem' }}>{quizAttempts.reduce((acc, curr) => acc + curr.score, 0) * 10} XP</div>
+           </div>
            <div className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Flame color="#f97316" fill="#f97316" size={20} />
               <div style={{ fontWeight: '800', fontSize: '1.25rem' }}>12 Day Streak</div>
@@ -162,13 +169,13 @@ const StudentDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {loading ? (
                 <p>Loading assignments...</p>
-              ) : assignments.length === 0 ? (
+              ) : [...assignments, ...quizAttempts.map(q => ({...q, type: 'quiz', title: q.quizzes.title}))].length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '4rem' }}>
                   <Clock size={48} style={{ color: 'var(--border)', marginBottom: '1rem' }} />
                   <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>All caught up! Head to the hubs for more practice.</p>
                 </div>
               ) : (
-                assignments.slice(0, 3).map((assign, i) => (
+                [...assignments, ...quizAttempts.map(q => ({...q, isQuizAttempt: true, title: q.quizzes.title, subject: q.quizzes.topic}))].slice(0, 4).map((assign, i) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -178,23 +185,29 @@ const StudentDashboard = () => {
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '20px' }}
                   >
                     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                      <div className="glass" style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: assign.type === 'coding' ? 'var(--primary)' : assign.type === 'quiz' ? '#ec4899' : 'var(--secondary)' }}>
-                        {assign.type === 'quiz' ? <Zap size={26} /> : assign.type === 'coding' ? <Code size={26} /> : <BookOpen size={26} />}
+                      <div className="glass" style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: assign.isQuizAttempt ? '#ec4899' : (assign.type === 'coding' ? 'var(--primary)' : 'var(--secondary)') }}>
+                        {assign.isQuizAttempt ? <Zap size={26} /> : (assign.type === 'coding' ? <Code size={26} /> : <BookOpen size={26} />)}
                       </div>
                       <div>
                         <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.1rem' }}>{assign.title}</h4>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                          <span style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase' }}>{assign.type}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> 2 days left</span>
+                          <span style={{ color: assign.isQuizAttempt ? '#ec4899' : 'var(--primary)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase' }}>{assign.isQuizAttempt ? 'Quiz Result' : assign.type}</span>
+                          {assign.isQuizAttempt ? (
+                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontWeight: '700' }}>Score: {assign.score}/{assign.total_questions}</span>
+                          ) : (
+                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> 2 days left</span>
+                          )}
                           <span>{assign.subject}</span>
                         </div>
                       </div>
                     </div>
-                    <Link to={`/student/attempt/${assign.id}`}>
-                      <button style={{ borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.25rem', fontWeight: '700' }}>
-                        Play <PlayCircle size={18} />
-                      </button>
-                    </Link>
+                    {!assign.isQuizAttempt && (
+                      <Link to={assign.type === 'quiz' ? `/student/quiz/${assign.id}` : `/student/attempt/${assign.id}`}>
+                        <button style={{ borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.25rem', fontWeight: '700' }}>
+                          Play <PlayCircle size={18} />
+                        </button>
+                      </Link>
+                    )}
                   </motion.div>
                 ))
               )}

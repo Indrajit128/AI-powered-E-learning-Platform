@@ -3,9 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+let supabaseInstance = null;
+
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('✅ Supabase initialized successfully');
+  } else {
+    console.warn('⚠️ Supabase environment variables missing. Real-time features will be unavailable.');
+  }
+} catch (err) {
+  console.error('❌ Failed to initialize Supabase:', err.message);
+}
+
+export const supabase = supabaseInstance;
 
 export const signUpUser = async (email, password) => {
+  if (!supabase) return { data: null, error: new Error('Supabase not initialized') };
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -24,6 +38,7 @@ export const signUpUser = async (email, password) => {
 }
 
 export const loginUser = async (email, password) => {
+  if (!supabase) return { data: null, error: new Error('Supabase not initialized') };
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -39,6 +54,7 @@ export const loginUser = async (email, password) => {
 }
 
 export const checkUser = async () => {
+  if (!supabase) return { data: null, error: new Error('Supabase not initialized') };
   const { data, error } = await supabase.auth.getUser()
 
   if (error || !data.user) {
