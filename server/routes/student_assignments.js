@@ -9,66 +9,63 @@ router.get('/assigned', auth, async (req, res) => {
     try {
         const studentId = req.user.id;
 
-        // 1. Get batches student is part of
-        const { data: batches, error: batchError } = await supabase
+        // 1. Find all batches this student belongs to
+        const { data: batchMappings, error: batchError } = await supabase
             .from('batch_students')
             .select('batch_id')
             .eq('student_id', studentId);
 
         if (batchError) throw batchError;
-        const batchIds = (batches || []).map(b => b.batch_id).filter(id => id);
+        const studentBatchIds = (batchMappings || []).map(m => m.batch_id).filter(id => id);
 
-        // 2. Build the query to find assignments targeted to student OR their batches
-        let queryParts = [];
-        queryParts.push(`student_id.eq.${studentId}`);
-        if (batchIds.length > 0) {
-            queryParts.push(`batch_id.in.(${batchIds.join(',')})`);
-        }
-
-        // 3. Get targeted assignment IDs
+        // 2. Find all assignment IDs targeted to this student OR their batches
         const { data: targets, error: targetError } = await supabase
             .from('assignment_targets')
-            .select('assignment_id')
-            .or(queryParts.join(','));
+            .select('assignment_id, student_id, batch_id');
 
         if (targetError) throw targetError;
-        const assignmentIds = [...new Set((targets || []).map(t => t.assignment_id))];
 
-        if (assignmentIds.length === 0) return res.json([]);
+        // Local filter to be absolutely sure of the logic
+        const myAssignmentIds = (targets || [])
+            .filter(t => 
+                t.student_id === studentId || 
+                (t.batch_id && studentBatchIds.includes(t.batch_id))
+            )
+            .map(t => t.assignment_id);
 
-        // 4. Get assignment details + check for current student's submissions
+        if (myAssignmentIds.length === 0) return res.json([]);
+
+        // 3. Fetch the actual assignments
         const { data: assignments, error: assignmentError } = await supabase
             .from('assignments')
-            .select(`
-                *,
-                submissions!assignment_id (
-                    id,
-                    student_id,
-                    status,
-                    grade,
-                    feedback,
-                    submitted_at
-                )
-            `)
-            .in('id', assignmentIds)
+            .select('*')
+            .in('id', myAssignmentIds)
             .order('created_at', { ascending: false });
 
         if (assignmentError) throw assignmentError;
 
-        // 5. Clean up the data: Extract only the current student's submission from the array
-        const result = assignments.map(a => {
-            const mySubmission = (a.submissions || []).find(s => s.student_id === studentId);
-            const { submissions, ...assignmentData } = a; // Remove the full submissions list
+        // 4. Fetch the student's submissions for these assignments
+        const { data: submissions, error: submissionError } = await supabase
+            .from('submissions')
+            .select('*')
+            .eq('student_id', studentId)
+            .in('assignment_id', myAssignmentIds);
+
+        if (submissionError) throw submissionError;
+
+        // 5. Merge assignments with submissions
+        const result = (assignments || []).map(assignment => {
+            const submission = (submissions || []).find(s => s.assignment_id === assignment.id);
             return {
-                ...assignmentData,
-                submission: mySubmission || null
+                ...assignment,
+                submission: submission || null
             };
         });
 
         res.json(result);
     } catch (err) {
-        console.error('Fetch Student Assignments Error:', err);
-        res.status(500).send('Server error');
+        console.error('Core Visibility Fetch Error:', err);
+        res.status(500).json({ msg: 'Failed to load assignments', error: err.message });
     }
 });
 
