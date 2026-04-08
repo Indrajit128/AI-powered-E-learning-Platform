@@ -78,7 +78,7 @@ const FacultyDashboard = () => {
       const [batchesRes, studentsRes, assignmentsRes, submissionsRes] = await Promise.all([
         axios.get('/api/faculty/batches', { headers }),
         axios.get('/api/faculty/students', { headers }),
-        axios.get('/api/faculty/assignments', { headers }),
+        axios.get('/api/faculty/all-assignments', { headers }),
         axios.get('/api/faculty/submissions', { headers })
       ]);
 

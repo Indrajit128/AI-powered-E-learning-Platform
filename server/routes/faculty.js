@@ -210,4 +210,35 @@ router.get('/submissions/:assignmentId', auth, facultyOnly, async (req, res) => 
     }
 });
 
+// @route   GET /api/faculty/submissions
+// @desc    View all submissions across all assignments by this faculty
+router.get('/submissions', auth, facultyOnly, async (req, res) => {
+    try {
+        const { data: assignments } = await supabase.from('assignments').select('id').eq('created_by', req.user.id);
+        const assignmentIds = (assignments || []).map(a => a.id);
+        if (assignmentIds.length === 0) return res.json([]);
+
+        const { data, error } = await supabase
+            .from('submissions')
+            .select('*, users!submissions_student_id_fkey(name, email), assignments(title)')
+            .in('assignment_id', assignmentIds)
+            .order('submitted_at', { ascending: false });
+
+        if (error) throw error;
+        
+        // Map data to match what the frontend expects
+        const mappedData = (data || []).map(s => ({
+            ...s,
+            student_name: s.users?.name,
+            assignment_title: s.assignments?.title
+        }));
+
+        res.json(mappedData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;
+
