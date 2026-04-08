@@ -8,12 +8,23 @@ router.post('/run-code', async (req, res) => {
     const { code, language, test_cases } = req.body;
     try {
         const results = await Promise.all(test_cases.map(async (tc) => {
-            const result = await executeCode(code, language, tc.input);
+            let finalCode = code;
+            
+            // Basic wrapper for JavaScript to call the function and print the result
+            if (language === 'javascript') {
+                const functionName = code.match(/function\s+(\w+)/)?.[1] || 'solution';
+                const inputs = tc.input.split('\n').join(',');
+                finalCode += `\n\nconst __res = ${functionName}(${inputs});\nconsole.log(JSON.stringify(__res));`;
+            }
+
+            const result = await executeCode(finalCode, language, tc.input);
+            const actual = result.stdout.trim().split('\n').pop(); // Get last line (the JSON result)
+
             return {
                 input: tc.input,
                 expected: tc.output,
-                actual: result.stdout.trim(),
-                passed: result.stdout.trim() === tc.output.trim(),
+                actual: actual,
+                passed: actual === tc.output.trim(),
                 status: result.status,
                 time: result.time,
                 memory: result.memory
@@ -30,11 +41,20 @@ router.post('/submit-code', async (req, res) => {
     const { challenge_id, user_id, code, language, test_cases } = req.body;
     try {
         const results = await Promise.all(test_cases.map(async (tc) => {
-            const result = await executeCode(code, language, tc.input);
+            let finalCode = code;
+            if (language === 'javascript') {
+                const functionName = code.match(/function\s+(\w+)/)?.[1] || 'solution';
+                const inputs = tc.input.split('\n').join(',');
+                finalCode += `\n\nconst __res = ${functionName}(${inputs});\nconsole.log(JSON.stringify(__res));`;
+            }
+
+            const result = await executeCode(finalCode, language, tc.input);
+            const actual = result.stdout.trim().split('\n').pop();
+
             return {
                 ...tc,
-                actual: result.stdout.trim(),
-                passed: result.stdout.trim() === tc.output.trim(),
+                actual: actual,
+                passed: actual === tc.output.trim(),
                 status: result.status,
                 time: result.time
             };
