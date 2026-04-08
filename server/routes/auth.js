@@ -78,8 +78,8 @@ router.post('/register', async (req, res) => {
             return res.status(500).json({ msg: `Database error: ${result.error.message}` });
         }
 
-        // Send OTP email
-        await sendOTP(email, otp);
+        // Send OTP email asynchronously to avoid blocking the UI
+        sendOTP(email, otp).catch(err => console.error('Background OTP email failed:', err));
 
         res.json({ msg: 'Registration successful. OTP sent to email.' });
     } catch (err) {
@@ -171,7 +171,9 @@ router.post('/resend-otp', async (req, res) => {
         const expiry = new Date(Date.now() + 30 * 60 * 1000);
 
         await supabase.from('users').update({ otp, otp_expires: expiry }).eq('email', email);
-        await sendOTP(email, otp);
+        
+        // Send OTP email asynchronously
+        sendOTP(email, otp).catch(err => console.error('Background Resend OTP email failed:', err));
 
         res.json({ msg: 'New OTP sent to your email' });
     } catch (err) {
