@@ -101,21 +101,91 @@ router.post('/generate-assignment', auth, facultyOnly, async (req, res) => {
 // @route   POST /api/faculty/assignments
 // @desc    Save and publish an assignment
 router.post('/assignments', auth, facultyOnly, async (req, res) => {
-    const { title, subject, type, batchId, questionsJson } = req.body;
+    const { title, subject, type, description, batchId, studentId, questionsJson, dueDate } = req.body;
 
     try {
-        const { data, error } = await supabase
+        // 1. Create the assignment
+        const { data: assignment, error: assignmentError } = await supabase
             .from('assignments')
-            .insert([{ title, subject, type, batch_id: batchId, questions_json: questionsJson }])
+            .insert([{ 
+                title, 
+                subject, 
+                type, 
+                description,
+                questions_json: questionsJson,
+                due_date: dueDate,
+                created_by: req.user.id
+            }])
             .select()
             .single();
         
-        if (error) throw error;
+        if (assignmentError) throw assignmentError;
 
-        if (global.io) {
-            global.io.to(`batch_${batchId}`).emit('new_assignment', data);
+        // 2. Create target(s)
+        if (batchId || studentId) {
+            const { error: targetError } = await supabase
+                .from('assignment_targets')
+                .insert([{
+                    assignment_id: assignment.id,
+                    batch_id: batchId || null,
+                    student_id: studentId || null
+                }]);
+            
+            if (targetError) throw targetError;
+
+            // Notify via Socket.io if batch is targeted
+            if (batchId && global.io) {
+                global.io.to(`batch_${batchId}`).emit('new_assignment', assignment);
+            }
         }
 
+        res.json(assignment);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   GET /api/faculty/all-assignments
+// @desc    Get all assignments created by faculty with their targets
+router.get('/all-assignments', auth, facultyOnly, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('assignments')
+            .select(`
+                *,
+                assignment_targets (
+                    batch_id,
+                    batches ( name ),
+                    student_id,
+                    users!assignment_targets_student_id_fkey ( name, email )
+                )
+            `)
+            .eq('created_by', req.user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   PATCH /api/faculty/grade/:submissionId
+// @desc    Grade a student submission
+router.patch('/grade/:submissionId', auth, facultyOnly, async (req, res) => {
+    const { grade, feedback } = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('submissions')
+            .update({ grade, feedback, status: 'graded' })
+            .eq('id', req.params.submissionId)
+            .select()
+            .single();
+
+        if (error) throw error;
         res.json(data);
     } catch (err) {
         console.error(err);
@@ -129,7 +199,7 @@ router.get('/submissions/:assignmentId', auth, facultyOnly, async (req, res) => 
     try {
         const { data, error } = await supabase
             .from('submissions')
-            .select('*, users(name, email)')
+            .select('*, users!submissions_student_id_fkey(name, email)')
             .eq('assignment_id', req.params.assignmentId);
 
         if (error) throw error;

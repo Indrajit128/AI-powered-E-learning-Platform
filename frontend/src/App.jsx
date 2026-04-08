@@ -20,6 +20,7 @@ import Performance from './pages/Performance';
 import ChallengeDetails from './pages/ChallengeDetails';
 import FacultyChallenges from './pages/FacultyChallenges';
 import QuizAttempt from './pages/QuizAttempt';
+import StudentAssignments from './pages/StudentAssignments';
 
 // ERP Admin Pages
 const AdminDashboard = () => <div className="card"><h2>Admin Dashboard</h2><p>Overview of institution stats, admissions, and financials.</p></div>;
@@ -72,7 +73,7 @@ function App() {
               <Route path="/student" element={user?.role === 'student' ? <StudentDashboard /> : <Navigate to="/login" />} />
               <Route path="/student/coding" element={user?.role === 'student' ? <CodingChallenges /> : <Navigate to="/login" />} />
               <Route path="/student/quizzes" element={user?.role === 'student' ? <OnlineQuizzes /> : <Navigate to="/login" />} />
-              <Route path="/student/practice" element={user?.role === 'student' ? <PracticeAssignments /> : <Navigate to="/login" />} />
+              <Route path="/student/practice" element={user?.role === 'student' ? <StudentAssignments /> : <Navigate to="/login" />} />
               <Route path="/student/performance" element={user?.role === 'student' ? <Performance /> : <Navigate to="/login" />} />
               <Route path="/student/coding-challenge/:id" element={user?.role === 'student' ? <ChallengeDetails /> : <Navigate to="/login" />} />
               <Route path="/student/quiz/:id" element={user?.role === 'student' ? <QuizAttempt /> : <Navigate to="/login" />} />

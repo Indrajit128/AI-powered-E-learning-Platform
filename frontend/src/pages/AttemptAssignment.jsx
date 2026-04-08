@@ -18,12 +18,10 @@ const AttemptAssignment = () => {
     const fetchAssignment = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`/api/student/assignments/batch_0`, { // Adjust batch fetch logic
+        const res = await axios.get(`/api/student-assignments/attempt/${id}`, {
           headers: { 'x-auth-token': token }
         });
-        // For demo, we find the assignment with ID from the list
-        const found = res.data.find(a => a.id === parseInt(id));
-        setAssignment(found);
+        setAssignment(res.data);
       } catch (err) {
         console.error('Error fetching assignment:', err);
       } finally {
@@ -57,7 +55,7 @@ const AttemptAssignment = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/student/submissions', {
+      await axios.post('/api/student-assignments/submit', {
         assignmentId: id,
         answersJson: answers,
         score: calculatedScore
@@ -82,7 +80,7 @@ const AttemptAssignment = () => {
         <div style={{ color: 'var(--success)', marginBottom: '1.5rem' }}><Trophy size={64} /></div>
         <h2 style={{ marginBottom: '1rem' }}>Assignment Submitted!</h2>
         <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>You scored <span style={{ fontWeight: '700', color: 'var(--primary)' }}>{score.toFixed(1)}%</span></p>
-        <button onClick={() => navigate('/student')} style={{ marginTop: '2rem', width: '100%' }}>Back to Dashboard</button>
+        <button onClick={() => navigate('/student/practice')} style={{ marginTop: '2rem', width: '100%' }}>Back to Dashboard</button>
       </div>
     </div>
   );
