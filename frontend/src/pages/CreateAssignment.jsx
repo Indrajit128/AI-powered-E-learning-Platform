@@ -127,7 +127,7 @@ const CreateAssignment = () => {
       }, {
         headers: { 'x-auth-token': token }
       });
-      navigate('/faculty-dashboard');
+      navigate('/faculty');
     } catch (err) {
       setError('Failed to publish assignment. Check your connection.');
     } finally {
@@ -136,52 +136,46 @@ const CreateAssignment = () => {
   };
 
   return (
-    <div className="relative min-h-screen pb-12 overflow-hidden">
-      {/* Background ambient glowing orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-success/20 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-[40%] left-[50%] translate-x-[-50%] w-[30%] h-[30%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="fade-in" style={{ paddingBottom: '4rem' }}>
+      
+      {/* Header Section */}
+      <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
+        <div>
+          <button 
+            onClick={() => step === 2 ? setStep(1) : navigate('/faculty')}
+            style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.5rem', cursor: 'pointer' }}
+          >
+            <ChevronLeft size={16} /> Back
+          </button>
+          <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {step === 1 ? 'Design' : 'Refine'} <span className="text-gradient">Assignment</span>
+            <Sparkles size={28} color="var(--primary)" />
+          </h1>
+        </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6 backdrop-blur-md bg-background/40 p-6 rounded-3xl border border-border/50 shadow-sm">
-          <div>
-            <button 
-              onClick={() => step === 2 ? setStep(1) : navigate('/faculty-dashboard')}
-              className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-all mb-3 w-fit"
-            >
-              <div className="p-1 rounded-md group-hover:bg-primary/10 transition-colors">
-                <ChevronLeft size={16} />
-              </div>
-              <span className="font-semibold tracking-wide">Back to Dashboard</span>
-            </button>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center gap-3">
-              {step === 1 ? 'Design' : 'Refine'} 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-cyan-400">Assignment</span>
-              <Sparkles size={32} className="text-primary animate-pulse ml-2" />
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-full border border-border/50">
+        <div className="header-actions">
+           <div className="glass" style={{ padding: '0.5rem', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid var(--border)' }}>
              {[1, 2].map(s => (
                <div 
                  key={s}
-                 className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 font-bold ${
-                   step === s 
-                   ? 'bg-gradient-to-tr from-primary to-purple-500 text-white shadow-xl shadow-primary/40 scale-110' 
-                   : 'bg-background text-muted-foreground border border-border'
-                 }`}
+                 style={{
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   width: '36px', height: '36px', borderRadius: '50%', fontWeight: '700', transition: 'all 0.3s',
+                   background: step === s ? 'var(--primary)' : 'transparent',
+                   color: step === s ? 'white' : 'var(--text-muted)'
+                 }}
                >
                  {s}
                </div>
              ))}
-          </div>
+           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Settings Panel (Step 1) */}
+      <div className="dashboard-layout" style={{ gridTemplateColumns: 'minmax(350px, 1fr) 2fr' }}>
+        
+        {/* Settings Panel (Step 1 or 2 controls) */}
+        <div>
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div 
@@ -189,137 +183,100 @@ const CreateAssignment = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                className="lg:col-span-4 space-y-6"
+                style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
               >
                 {/* Core Configuration */}
-                <div className="relative p-6 rounded-[2rem] bg-background/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-[100px] -z-10 transition-colors group-hover:bg-primary/20" />
-                  
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                      <Settings size={20} />
-                    </div>
-                    Core Config
+                <div className="card">
+                  <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Settings color="var(--primary)" size={20} /> Core Config
                   </h3>
                   
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Assignment Title</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Intro to Neural Networks" 
-                        value={formData.title} 
-                        onChange={e => setFormData({...formData, title: e.target.value})} 
-                        className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-4 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none"
-                        required 
-                      />
-                    </div>
+                  <div className="input-group">
+                    <label>Assignment Title</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Intro to Neural Networks" 
+                      value={formData.title} 
+                      onChange={e => setFormData({...formData, title: e.target.value})} 
+                      required 
+                    />
+                  </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Description (Optional)</label>
-                      <textarea 
-                        placeholder="Instructions for students... what should they focus on?" 
-                        value={formData.description} 
-                        onChange={e => setFormData({...formData, description: e.target.value})} 
-                        className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-4 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none h-28 resize-none"
-                      />
-                    </div>
+                  <div className="input-group">
+                    <label>Description (Optional)</label>
+                    <textarea 
+                      placeholder="Instructions for students... what should they focus on?" 
+                      value={formData.description} 
+                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                      style={{ minHeight: '100px', resize: 'vertical' }}
+                    />
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Subject domain</label>
-                          <select 
-                            value={formData.subject} 
-                            onChange={e => setFormData({...formData, subject: e.target.value})}
-                            className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-3 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none appearance-none"
-                          >
-                            <option value="Artificial Intelligence">AI Mastery</option>
-                            <option value="Full Stack Development">Full Stack Dev</option>
-                            <option value="Data Structures">Data Structures</option>
-                            <option value="Cloud Computing">Cloud Computing</option>
-                          </select>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Deadline Date</label>
-                          <input 
-                            type="date" 
-                            value={formData.dueDate} 
-                            onChange={e => setFormData({...formData, dueDate: e.target.value})}
-                            className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-3 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none"
-                          />
-                       </div>
-                    </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                     <div className="input-group" style={{ marginBottom: 0 }}>
+                        <label>Subject Domain</label>
+                        <select 
+                          value={formData.subject} 
+                          onChange={e => setFormData({...formData, subject: e.target.value})}
+                        >
+                          <option value="Artificial Intelligence">AI Mastery</option>
+                          <option value="Full Stack Development">Full Stack Dev</option>
+                          <option value="Data Structures">Data Structures</option>
+                          <option value="Cloud Computing">Cloud Computing</option>
+                        </select>
+                     </div>
+                     <div className="input-group" style={{ marginBottom: 0 }}>
+                        <label>Deadline Date</label>
+                        <input 
+                          type="date" 
+                          value={formData.dueDate} 
+                          onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                        />
+                     </div>
                   </div>
                 </div>
 
                 {/* Audience Targeting */}
-                <div className="relative p-6 rounded-[2rem] bg-background/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl overflow-hidden group hover:border-secondary/30 transition-all duration-500">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-bl-[100px] -z-10 transition-colors group-hover:bg-secondary/20" />
-                  
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-secondary/10 text-secondary">
-                      <Target size={20} />
-                    </div>
-                    Audience
+                <div className="card">
+                  <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Target color="var(--secondary)" size={20} /> Audience
                   </h3>
                   
-                  <div className="space-y-5">
-                     <div className="flex p-1.5 bg-muted/50 rounded-xl gap-1 border border-border/50">
-                        <button 
-                           onClick={() => setFormData({...formData, studentId: '', batchId: ''})}
-                           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                              !formData.studentId && !formData.batchId 
-                              ? 'bg-background shadow-md text-foreground' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-background/20'
-                           }`}
-                        >
-                           General
-                        </button>
-                        <div className="w-px bg-border my-2 mx-1" />
-                        <button 
-                           className="flex-1 py-2 text-xs font-bold rounded-lg text-muted-foreground opacity-50 cursor-not-allowed flex items-center justify-center gap-1"
-                           disabled
-                           title="Pro Feature"
-                        >
-                           Groups <span className="px-1.5 py-0.5 rounded text-[8px] bg-primary/20 text-primary">PRO</span>
-                        </button>
-                     </div>
+                  <div style={{ background: 'var(--bg-main)', padding: '4px', borderRadius: '8px', display: 'flex', marginBottom: '1.5rem', border: '1px solid var(--border)' }}>
+                    <button 
+                       onClick={() => setFormData({...formData, studentId: '', batchId: ''})}
+                       style={{ flex: 1, padding: '6px 12px', fontSize: '0.8rem', background: (!formData.studentId && !formData.batchId) ? 'white' : 'transparent', color: (!formData.studentId && !formData.batchId) ? 'var(--primary)' : 'var(--text-muted)', boxShadow: (!formData.studentId && !formData.batchId) ? 'var(--shadow)' : 'none', border: 'none' }}
+                    >
+                       General
+                    </button>
+                    <button 
+                       disabled
+                       style={{ flex: 1, padding: '6px 12px', fontSize: '0.8rem', background: 'transparent', color: 'var(--text-muted)', border: 'none', opacity: 0.5, cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    >
+                       Groups <span style={{ fontSize: '0.6rem', padding: '2px 4px', background: 'var(--primary)', color: 'white', borderRadius: '4px' }}>PRO</span>
+                    </button>
+                  </div>
 
-                     <div className="space-y-4 pt-1">
-                        <div className="relative">
-                           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                              <Users size={16} />
-                           </div>
-                           <select 
-                             value={formData.batchId} 
-                             onChange={e => setFormData({...formData, batchId: e.target.value, studentId: ''})}
-                             className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none appearance-none"
-                           >
-                             <option value="">Assign to a whole batch...</option>
-                             {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                           </select>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="h-px bg-border flex-1" />
-                          <span className="text-[10px] font-black text-muted-foreground tracking-widest bg-muted px-3 py-1 rounded-full uppercase">OR</span>
-                          <div className="h-px bg-border flex-1" />
-                        </div>
+                  <div className="input-group">
+                     <select 
+                       value={formData.batchId} 
+                       onChange={e => setFormData({...formData, batchId: e.target.value, studentId: ''})}
+                     >
+                       <option value="">Assign to a whole batch...</option>
+                       {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                     </select>
+                  </div>
+                  
+                  <div style={{ textAlign: 'center', margin: '1rem 0', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'bold' }}>OR</div>
 
-                        <div className="relative">
-                           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                              <Plus size={16} />
-                           </div>
-                           <select 
-                             value={formData.studentId} 
-                             onChange={e => setFormData({...formData, studentId: e.target.value, batchId: ''})}
-                             className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-4 ring-primary/10 transition-all outline-none appearance-none"
-                           >
-                             <option value="">Assign to a specific student...</option>
-                             {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
-                           </select>
-                        </div>
-                     </div>
+                  <div className="input-group" style={{ marginBottom: 0 }}>
+                     <select 
+                       value={formData.studentId} 
+                       onChange={e => setFormData({...formData, studentId: e.target.value, batchId: ''})}
+                     >
+                       <option value="">Assign to a specific student...</option>
+                       {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
+                     </select>
                   </div>
                 </div>
               </motion.div>
@@ -330,279 +287,248 @@ const CreateAssignment = () => {
                 initial={{ opacity: 0, x: -20, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="lg:col-span-4 space-y-6"
+                style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
               >
-                 <div className="relative p-6 rounded-[2rem] bg-gradient-to-b from-success/5 to-transparent border border-success/20 shadow-2xl overflow-hidden group">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-success/20 rounded-full blur-3xl -z-10" />
-                    
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <div className="p-2 rounded-xl bg-success/10 text-success">
-                        <BrainCircuit size={20} />
-                      </div>
-                      AI Refinement
+                 <div className="card" style={{ borderColor: 'var(--success)', background: '#10b98105' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <BrainCircuit color="var(--success)" size={20} /> AI Refinement
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
                       Content looks good? You can still tweak the parameters and regenerate if needed to adjust difficulty or style.
                     </p>
 
-                    <div className="space-y-6">
-                       <div className="space-y-3">
-                          <label className="text-[10px] font-black tracking-widest uppercase text-muted-foreground pl-1">Difficulty Level</label>
-                          <div className="flex gap-2">
-                             {['beginner', 'intermediate', 'advanced'].map(l => (
-                               <button
-                                 key={l}
-                                 onClick={() => setFormData({...formData, level: l})}
-                                 className={`flex-1 py-2 text-[11px] font-bold rounded-xl border uppercase tracking-wider transition-all duration-300 ${
-                                   formData.level === l 
-                                   ? 'bg-foreground text-background border-foreground shadow-lg scale-[1.02]' 
-                                   : 'bg-background/50 border-border text-muted-foreground hover:border-foreground/50 hover:bg-background'
-                                 }`}
-                               >
-                                 {l}
-                               </button>
-                             ))}
-                          </div>
+                    <div className="input-group">
+                       <label>Difficulty Level</label>
+                       <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          {['beginner', 'intermediate', 'advanced'].map(l => (
+                            <button
+                              type="button"
+                              key={l}
+                              onClick={() => setFormData({...formData, level: l})}
+                              style={{
+                                flex: 1, padding: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase', borderRadius: '8px', 
+                                background: formData.level === l ? 'var(--primary)' : 'white',
+                                color: formData.level === l ? 'white' : 'var(--text-main)',
+                                border: `1px solid ${formData.level === l ? 'var(--primary)' : 'var(--border)'}`
+                              }}
+                            >
+                              {l}
+                            </button>
+                          ))}
                        </div>
-
-                       <button 
-                          onClick={handleGenerate} 
-                          disabled={isGenerating} 
-                          className="w-full relative overflow-hidden group bg-muted/50 border border-border hover:border-primary/50 text-foreground font-bold py-4 rounded-2xl transition-all"
-                        >
-                          <div className="absolute inset-0 w-0 bg-primary/5 transition-all duration-[500ms] ease-out group-hover:w-full" />
-                          <span className="relative flex items-center justify-center gap-2">
-                            {isGenerating ? <Loader2 size={18} className="animate-spin text-primary" /> : <><Wand2 size={18} className="text-primary group-hover:rotate-12 transition-transform" /> Regenerate All</>}
-                          </span>
-                        </button>
                     </div>
+
+                    <button 
+                       onClick={handleGenerate} 
+                       disabled={isGenerating} 
+                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'white', color: 'var(--text-main)', border: '1px solid var(--border)' }}
+                     >
+                       {isGenerating ? <Loader2 size={18} className="animate-spin" color="var(--primary)" /> : <><Wand2 size={18} color="var(--primary)" /> Regenerate All</>}
+                     </button>
                  </div>
 
-                 <div className="space-y-4">
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <button 
                       onClick={handleSave} 
                       disabled={isSaving || !generatedContent} 
-                      className="w-full relative overflow-hidden group bg-gradient-to-r from-primary to-purple-600 text-white font-black text-lg tracking-wide py-5 rounded-2xl shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)] hover:shadow-[0_0_60px_-15px_rgba(var(--primary),0.7)] transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                      style={{ width: '100%', padding: '1rem', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
-                      <span className="relative flex items-center justify-center gap-2">
-                         {isSaving ? <><Loader2 size={22} className="animate-spin" /> Publishing...</> : <><Save size={22} /> PUBLISH ASSIGNMENT</>}
-                      </span>
+                       {isSaving ? <><Loader2 size={22} className="animate-spin" /> Publishing...</> : <><Save size={20} /> PUBLISH ASSIGNMENT</>}
                     </button>
                     
                     <button 
                       onClick={() => setStep(1)} 
-                      className="w-full flex items-center justify-center gap-2 py-4 font-bold text-muted-foreground hover:text-foreground transition-colors rounded-2xl hover:bg-muted/30"
+                      style={{ width: '100%', padding: '1rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
                     >
-                      <Settings size={18} /> BACK TO SETTINGS
+                       BACK TO SETTINGS
                     </button>
                  </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
 
-          {/* Content Preview (Step 1 Placeholder / Step 2 Generated Content) */}
-          <div className="lg:col-span-8 h-full">
-             <div className={`relative h-full min-h-[600px] flex flex-col rounded-[2.5rem] overflow-hidden transition-all duration-700 ${
-               step === 1 
-               ? 'border-2 border-dashed border-border/50 bg-muted/5' 
-               : 'border border-border bg-background/40 backdrop-blur-3xl shadow-2xl'
-             }`}>
-                
-                <div className="px-8 pt-8 pb-6 border-b border-border/30 flex items-center justify-between z-10 bg-background/50 backdrop-blur-md">
-                  <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
-                    {step === 2 && <CheckCircle2 size={26} className="text-success drop-shadow-[0_0_10px_rgba(var(--success),0.5)]" />} 
-                    <span className={step === 1 ? 'text-muted-foreground' : 'text-foreground'}>
-                       {step === 1 ? 'AI Intelligence Scope' : 'Generated Curriculum'}
-                    </span>
-                  </h3>
-                  {generatedContent && (
-                    <span className="px-4 py-1.5 bg-success/10 border border-success/20 text-success text-[10px] font-black rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_-3px_rgba(var(--success),0.3)]">
-                      <div className="w-2 h-2 rounded-full bg-success animate-pulse" /> AI Ready
-                    </span>
-                  )}
+        {/* Content Preview (Step 1 Placeholder / Step 2 Generated Content) */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+           <div className="card" style={{ flex: 1, padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: '600px', background: step === 1 ? '#f8fafc' : 'white', borderStyle: step === 1 ? 'dashed' : 'solid', borderWidth: step === 1 ? '2px' : '1px' }}>
+              
+              <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem' }}>
+                  {step === 2 && <CheckCircle2 size={24} color="var(--success)" />} 
+                  <span style={{ color: step === 1 ? 'var(--text-muted)' : 'var(--text-main)' }}>
+                     {step === 1 ? 'AI Intelligence Scope' : 'Generated Curriculum'}
+                  </span>
+                </h3>
+                {generatedContent && (
+                  <span style={{ padding: '4px 12px', background: '#10b98115', color: 'var(--success)', fontSize: '0.75rem', fontWeight: '800', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} className="animate-pulse" /> AI Ready
+                  </span>
+                )}
+              </div>
+
+              {step === 1 ? (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', textAlign: 'center' }}>
+                   
+                   <div style={{ padding: '1.5rem', background: '#4f46e510', borderRadius: '50%', marginBottom: '2rem' }}>
+                      <Wand2 size={48} color="var(--primary)" />
+                   </div>
+                   
+                   <h2 style={{ margin: '0 0 1rem 0', fontSize: '2rem', fontWeight: '800' }}>Ready to summon the AI?</h2>
+                   <p style={{ color: 'var(--text-muted)', maxWidth: '400px', lineHeight: '1.6', marginBottom: '2.5rem' }}>
+                     Complete the configuration panel on the left. Our specialized AI engine will craft tailored, high-quality material for your students in seconds.
+                   </p>
+                   
+                   <button 
+                      onClick={handleGenerate}
+                      disabled={isGenerating || !formData.title || (!formData.batchId && !formData.studentId)}
+                      style={{ padding: '1rem 2rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}
+                   >
+                      {isGenerating ? <><Loader2 size={24} className="animate-spin" /> GENERATING...</> : <><Sparkles size={24} /> GENERATE CONTENT</>}
+                   </button>
+                   {error && <p style={{ color: 'var(--danger)', background: '#ef444410', padding: '0.5rem 1rem', borderRadius: '8px', marginTop: '1.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}><AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom' }}/> {error}</p>}
                 </div>
-
-                {step === 1 ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-12 relative">
-                     <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px] pointer-events-none mix-blend-overlay" />
-                     
-                     <div className="relative mb-8 group">
-                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/40 transition-all duration-700 group-hover:scale-150" />
-                        <div className="relative p-8 bg-background border border-white/10 rounded-full shadow-2xl">
-                           <Wand2 size={48} className="text-primary animate-pulse" />
-                        </div>
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                >
+                  <div style={{ padding: '0.75rem 2rem', background: '#10b98110', borderBottom: '1px solid #10b98130', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <div style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: '600' }}>
+                        <BrainCircuit size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} />
+                        Intelligence Report: Successfully materialized <strong style={{ padding: '2px 6px', background: 'rgba(16,185,129,0.2)', borderRadius: '4px' }}>{generatedContent?.length || 0}</strong> items tailored for "{formData.subject}".
                      </div>
-                     
-                     <h4 className="text-3xl font-black mb-4 tracking-tight">Ready to summon the AI?</h4>
-                     <p className="text-muted-foreground max-w-md text-lg leading-relaxed mb-10">
-                       Complete the configuration panel on the left. Our specialized AI engine will craft tailored, high-quality material for your students in seconds.
-                     </p>
-                     
-                     <button 
-                        onClick={handleGenerate}
-                        disabled={isGenerating || !formData.title || (!formData.batchId && !formData.studentId)}
-                        className="group relative px-10 py-5 rounded-full overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background font-black text-lg tracking-wide hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.3)] dark:hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <span className="relative flex items-center gap-3">
-                           {isGenerating ? <><Loader2 size={24} className="animate-spin" /> GENERATING NEURAL PATHWAYS...</> : <><Sparkles size={24} className="group-hover:animate-bounce" /> GENERATE CONTENT</>}
-                        </span>
+                     <button onClick={() => { setGeneratedContent(null); setStep(1); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '4px', cursor: 'pointer' }} title="Discard Content">
+                        <Trash2 size={16} />
                      </button>
-                     {error && <p className="mt-6 text-sm text-destructive font-bold bg-destructive/10 px-4 py-2 rounded-xl inline-flex items-center gap-2"><AlertCircle size={16}/> {error}</p>}
                   </div>
-                ) : (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex-1 flex flex-col overflow-hidden"
-                  >
-                    <div className="px-8 py-4 bg-success/5 border-b border-success/10 flex items-center justify-between">
-                       <div className="text-sm text-success/90 flex items-center gap-2">
-                          <BrainCircuit size={16} />
-                          <span><strong className="font-black tracking-tight">Intelligence Report:</strong> Successfully materialized <span className="px-2 py-0.5 rounded-md bg-success/20 font-black">{generatedContent?.length || 0}</span> items tailored for "{formData.subject}".</span>
-                       </div>
-                       <button onClick={() => { setGeneratedContent(null); setStep(1); }} className="p-2 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group" title="Discard Content">
-                          <Trash2 size={18} className="group-hover:scale-110 transition-transform" />
-                       </button>
-                    </div>
 
-                    <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 custom-scrollbar relative">
-                      <div className="absolute top-0 left-1/2 -ml-px w-px h-full bg-gradient-to-b from-border to-transparent -z-10 pointer-events-none opacity-50" />
-                      
-                      {Array.isArray(generatedContent) ? (
-                        <>
-                          {generatedContent.map((item, i) => (
-                            <motion.div 
-                              key={i}
-                              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-                              className="p-8 rounded-[2rem] bg-background/80 backdrop-blur-md border border-white/5 dark:border-white/5 shadow-xl group hover:border-primary/40 hover:shadow-primary/5 transition-all duration-500 relative overflow-hidden"
-                            >
-                              <div className="absolute top-0 left-0 w-2 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                              <div className="flex items-start gap-4">
-                                 <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary font-black text-xl flex items-center justify-center border border-primary/20 shadow-inner">
-                                   {i+1}
-                                 </div>
-                                 
-                                 <div className="flex-1 space-y-6 pt-1">
-                                    {editingIndex === i ? (
-                                      <div className="space-y-4">
-                                        <input 
-                                          type="text" 
-                                          value={editItem.question || editItem.front || editItem.sentence || ''} 
-                                          onChange={e => {
-                                            const key = editItem.question !== undefined ? 'question' : (editItem.front !== undefined ? 'front' : 'sentence');
-                                            setEditItem({...editItem, [key]: e.target.value});
-                                          }}
-                                          className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-4 py-3 font-bold text-lg outline-none"
-                                        />
-                                        {editItem.options && (
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {editItem.options.map((opt, j) => (
-                                              <div key={j} className="flex items-center gap-2">
-                                                <input 
-                                                  type="radio" 
-                                                  name={`correct-${i}`} 
-                                                  checked={editItem.correctAnswer === j}
-                                                  onChange={() => setEditItem({...editItem, correctAnswer: j})}
-                                                  className="w-5 h-5 text-success"
-                                                />
-                                                <input 
-                                                  type="text" 
-                                                  value={opt}
-                                                  onChange={e => {
-                                                    const newOpts = [...editItem.options];
-                                                    newOpts[j] = e.target.value;
-                                                    setEditItem({...editItem, options: newOpts});
-                                                  }}
-                                                  className="flex-1 bg-background/50 border border-border focus:border-primary/50 rounded-xl px-3 py-2 text-sm outline-none"
-                                                />
-                                              </div>
-                                            ))}
-                                          </div>
-                                        )}
-                                        <div className="flex justify-end gap-2 pt-2">
-                                           <button onClick={() => setEditingIndex(null)} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground">Cancel</button>
-                                           <button onClick={handleSaveEdit} className="px-6 py-2 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25">Save</button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div className="flex items-start justify-between gap-4">
-                                          <div className="font-bold text-xl leading-relaxed text-foreground/90">
-                                            {item.question || item.front || item.sentence}
-                                          </div>
-                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleEditClick(i, item)} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDeleteItem(i)} className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"><Trash2 size={16} /></button>
-                                          </div>
-                                        </div>
-
-                                {item.options && (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     {item.options.map((opt, j) => {
-                                       const isCorrect = item.correctAnswer === j;
-                                       return (
-                                         <div 
-                                           key={j} 
-                                           className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 ${
-                                             isCorrect 
-                                             ? 'bg-success/5 border-success text-success font-semibold shadow-[0_0_20px_-5px_rgba(var(--success),0.2)]' 
-                                             : 'bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/50 hover:border-border'
-                                           }`}
-                                         >
-                                           {isCorrect && <div className="absolute inset-0 bg-success/5 pointer-events-none" />}
-                                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-inner flex-shrink-0 ${
-                                             isCorrect ? 'bg-success text-white' : 'bg-background text-muted-foreground'
-                                           }`}>
-                                             {String.fromCharCode(65 + j)}
-                                           </div>
-                                           <span className="leading-snug">{opt}</span>
-                                         </div>
-                                       )
-                                     })}
-                                  </div>
-                                )}
-
-                                <div className="pt-6 mt-4 border-t border-border/40 flex items-center justify-between">
-                                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-success/10 border border-success/20 text-success shadow-inner">
-                                     <CheckCircle2 size={16} /> 
-                                     <span className="text-xs font-black uppercase tracking-widest">
-                                        Correct Answer: {item.correctAnswer !== undefined ? item.options[item.correctAnswer] : (item.back || item.answer)}
-                                     </span>
-                                  </div>
-                                </div>
-                                      </>
-                                    )}
-                                 </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                          
-                          <motion.button
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-main)' }} className="custom-scrollbar">
+                    
+                    {Array.isArray(generatedContent) ? (
+                      <>
+                        {generatedContent.map((item, i) => (
+                          <motion.div 
+                            key={i}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            onClick={handleAddCustom}
-                            className="w-full p-6 rounded-[2rem] border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-primary hover:bg-primary/5 hover:border-primary/50 transition-all group"
+                            transition={{ delay: i * 0.1 }}
+                            className="card stat-card"
+                            style={{ padding: '2rem', position: 'relative' }}
                           >
-                            <div className="p-3 bg-background rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                              <PlusCircle size={24} className="text-primary" />
+                            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+                               <div style={{ flexShrink: 0, width: '40px', height: '40px', borderRadius: '12px', background: '#4f46e515', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.2rem' }}>
+                                 {i+1}
+                               </div>
+                               
+                               <div style={{ flex: 1 }}>
+                                  {editingIndex === i ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                      <input 
+                                        type="text" 
+                                        value={editItem.question || editItem.front || editItem.sentence || ''} 
+                                        onChange={e => {
+                                          const key = editItem.question !== undefined ? 'question' : (editItem.front !== undefined ? 'front' : 'sentence');
+                                          setEditItem({...editItem, [key]: e.target.value});
+                                        }}
+                                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--primary)', borderRadius: '8px', fontSize: '1rem', fontWeight: '600' }}
+                                      />
+                                      {editItem.options && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                          {editItem.options.map((opt, j) => (
+                                            <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              <input 
+                                                type="radio" 
+                                                name={`correct-${i}`} 
+                                                checked={editItem.correctAnswer === j}
+                                                onChange={() => setEditItem({...editItem, correctAnswer: j})}
+                                              />
+                                              <input 
+                                                type="text" 
+                                                value={opt}
+                                                onChange={e => {
+                                                  const newOpts = [...editItem.options];
+                                                  newOpts[j] = e.target.value;
+                                                  setEditItem({...editItem, options: newOpts});
+                                                }}
+                                                style={{ flex: 1, padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.85rem' }}
+                                              />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '0.5rem' }}>
+                                         <button type="button" onClick={() => setEditingIndex(null)} style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Cancel</button>
+                                         <button type="button" onClick={handleSaveEdit} style={{ padding: '0.5rem 1.5rem', fontSize: '0.85rem' }}>Save Changes</button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                                        <div style={{ fontWeight: '700', fontSize: '1.1rem', color: 'var(--text-main)', lineHeight: '1.5', marginBottom: '1rem' }}>
+                                          {item.question || item.front || item.sentence}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button onClick={() => handleEditClick(i, item)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '6px', cursor: 'pointer' }}><Edit2 size={16} /></button>
+                                          <button onClick={() => handleDeleteItem(i)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', padding: '6px', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                                        </div>
+                                      </div>
+
+                                      {item.options && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.75rem' }}>
+                                           {item.options.map((opt, j) => {
+                                             const isCorrect = item.correctAnswer === j;
+                                             return (
+                                               <div 
+                                                 key={j} 
+                                                 style={{
+                                                   padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px',
+                                                   background: isCorrect ? '#10b98110' : '#f8fafc',
+                                                   border: `1px solid ${isCorrect ? 'var(--success)' : 'var(--border)'}`,
+                                                   color: isCorrect ? 'var(--success)' : 'var(--text-main)',
+                                                   fontWeight: isCorrect ? '700' : '500'
+                                                 }}
+                                               >
+                                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isCorrect ? 'var(--success)' : 'white', color: isCorrect ? 'white' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: '800', border: isCorrect ? 'none' : '1px solid var(--border)' }}>
+                                                   {String.fromCharCode(65 + j)}
+                                                 </div>
+                                                 <span style={{ fontSize: '0.9rem' }}>{opt}</span>
+                                               </div>
+                                             )
+                                           })}
+                                        </div>
+                                      )}
+
+                                      <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: '#10b98115', color: 'var(--success)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                           <CheckCircle2 size={14} /> Correct Answer: {item.correctAnswer !== undefined ? item.options[item.correctAnswer] : (item.back || item.answer)}
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+                               </div>
                             </div>
-                            <span className="font-bold tracking-wide">Add Custom Question</span>
-                          </motion.button>
-                        </>
-                      ) : (
-                        <div className="p-8 rounded-[2rem] bg-muted/20 border border-border/50 font-mono text-sm overflow-x-auto shadow-inner text-muted-foreground">
-                          <pre>{JSON.stringify(generatedContent, null, 2)}</pre>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-             </div>
-          </div>
+                          </motion.div>
+                        ))}
+                        
+                        <button
+                          onClick={handleAddCustom}
+                          className="card stat-card"
+                          style={{ width: '100%', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: 'var(--primary)', border: '2px dashed var(--primary)', background: '#4f46e505' }}
+                        >
+                          <PlusCircle size={32} />
+                          <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>Add Custom Question</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="card" style={{ background: '#f8fafc', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '0.85rem', overflowX: 'auto' }}>
+                        <pre>{JSON.stringify(generatedContent, null, 2)}</pre>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+           </div>
         </div>
       </div>
     </div>
@@ -610,4 +536,3 @@ const CreateAssignment = () => {
 };
 
 export default CreateAssignment;
-

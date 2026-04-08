@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Zap, Trash2, Edit2, Info, BookOpen, CheckCircle, Database, Layout, ShieldAlert, Sparkles, Loader2, Code2, Tags } from 'lucide-react';
+import { Plus, Zap, Trash2, Edit2, Info, BookOpen, CheckCircle, Database, Layout, ShieldAlert, Sparkles, Loader2, Code2, Tags, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FacultyChallenges = () => {
@@ -33,7 +33,6 @@ const FacultyChallenges = () => {
             const res = await axios.post('/api/challenges/generate-ai', genConfig);
             setPreviewChallenge(res.data);
             setShowGenModal(false);
-            alert('AI generated a new challenge! Previewing now.');
         } catch (err) {
             console.error('Generation failed:', err);
             alert('AI Generation failed. Check API keys.');
@@ -48,7 +47,7 @@ const FacultyChallenges = () => {
             const user = JSON.parse(localStorage.getItem('user'));
             const res = await axios.post('/api/challenges', {
                 ...previewChallenge,
-                created_by: user.id
+                created_by: user?.id
             });
             setChallenges([res.data, ...challenges]);
             setPreviewChallenge(null);
@@ -68,178 +67,172 @@ const FacultyChallenges = () => {
     };
 
     return (
-        <div className="relative min-h-[calc(100vh-100px)] py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-            {/* Ambient Background */}
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
-            <div className="absolute bottom-0 left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-            <div className="max-w-7xl mx-auto relative z-10 space-y-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-2xl bg-background/50 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center gap-3">
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-400">Coding</span> Challenges
-                            <Code2 size={40} className="text-primary hidden sm:block" />
-                        </h1>
-                        <p className="text-muted-foreground mt-2 font-medium tracking-wide">Manage algorithmic tasks and technical assessments.</p>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-4 relative z-10">
-                        <button onClick={() => setShowGenModal(true)} className="group relative overflow-hidden px-6 py-3 rounded-2xl font-black text-sm bg-gradient-to-r from-primary to-purple-600 text-white shadow-[0_0_30px_-5px_rgba(var(--primary),0.5)] hover:shadow-[0_0_40px_-5px_rgba(var(--primary),0.7)] hover:scale-[1.02] transition-all flex items-center gap-2">
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                            <Zap size={18} className="group-hover:animate-bounce" /> Auto-Generate (AI)
-                        </button>
-                        <button className="px-6 py-3 rounded-2xl font-bold text-sm bg-background/60 backdrop-blur-md border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-xl flex items-center gap-2 text-foreground">
-                            <Plus size={18} className="text-primary" /> Manual Entry
-                        </button>
-                    </div>
+        <div className="fade-in" style={{ paddingBottom: '4rem' }}>
+            
+            {/* Header */}
+            <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        Coding <span className="text-gradient">Challenges</span>
+                        <Code2 size={32} color="var(--primary)" />
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>
+                        Manage algorithmic tasks and technical assessments.
+                    </p>
                 </div>
-
-                {/* AI Preview Card */}
-                <AnimatePresence>
-                    {previewChallenge && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="p-8 rounded-[2.5rem] bg-gradient-to-br from-success/10 via-background/80 to-background/80 backdrop-blur-2xl border border-success/30 shadow-[0_0_50px_-10px_rgba(var(--success),0.2)] relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-success/20 rounded-full blur-3xl" />
-                            
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
-                                <div>
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success/20 text-success text-[10px] font-black uppercase tracking-widest mb-3 border border-success/30">
-                                        <div className="w-2 h-2 rounded-full bg-success animate-pulse" /> AI Draft Generated
-                                    </div>
-                                    <h2 className="text-2xl font-black tracking-tight">{previewChallenge.title}</h2>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button onClick={() => setPreviewChallenge(null)} className="px-5 py-2.5 rounded-xl font-bold text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors border border-transparent">Discard</button>
-                                    <button onClick={handleSaveChallenge} className="px-5 py-2.5 rounded-xl font-black text-sm bg-success text-white shadow-lg hover:shadow-success/30 hover:scale-105 transition-all flex items-center gap-2">
-                                        <CheckCircle size={18} /> Publish to Library
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                                <div className="p-5 rounded-2xl bg-background/50 border border-white/5 shadow-inner flex items-center gap-4">
-                                    <div className="p-3 rounded-xl bg-primary/10 text-primary"><ShieldAlert size={20}/></div>
-                                    <div><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Difficulty</p><p className="font-bold">{previewChallenge.difficulty}</p></div>
-                                </div>
-                                <div className="p-5 rounded-2xl bg-background/50 border border-white/5 shadow-inner flex items-center gap-4">
-                                    <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500"><Database size={20}/></div>
-                                    <div><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Test Cases</p><p className="font-bold">{previewChallenge.test_cases?.length || 0} Scenarios</p></div>
-                                </div>
-                                <div className="p-5 rounded-2xl bg-background/50 border border-white/5 shadow-inner flex items-center gap-4">
-                                    <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-500"><Tags size={20}/></div>
-                                    <div><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Topics</p><p className="font-bold text-sm truncate">{previewChallenge.tags?.join(', ')}</p></div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Challenges Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {loading ? (
-                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-muted-foreground">
-                            <Loader2 size={40} className="animate-spin mb-4 text-primary" />
-                            <p className="font-black tracking-widest uppercase">Fetching Databanks...</p>
-                        </div>
-                    ) : challenges.length > 0 ? (
-                        challenges.map((c, i) => (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                key={c.id} 
-                                className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 hover:border-primary/40 shadow-xl group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col"
-                            >
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
-                                
-                                <div className="flex justify-between items-start mb-4 relative z-10">
-                                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-inner border ${
-                                        c.difficulty === 'Easy' ? 'bg-success/10 text-success border-success/20' : 
-                                        c.difficulty === 'Medium' ? 'bg-warning/10 text-warning border-warning/20' : 
-                                        'bg-destructive/10 text-destructive border-destructive/20'
-                                    }`}>
-                                        {c.difficulty}
-                                    </span>
-                                    
-                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 rounded-lg bg-background hover:bg-primary/10 hover:text-primary transition-colors text-muted-foreground shadow-sm"><Edit2 size={14} /></button>
-                                        <button onClick={() => deleteChallenge(c.id)} className="p-2 rounded-lg bg-background hover:bg-destructive/10 hover:text-destructive transition-colors text-muted-foreground shadow-sm"><Trash2 size={14} /></button>
-                                    </div>
-                                </div>
-
-                                <div className="mb-6 relative z-10 flex-1">
-                                    <h3 className="text-xl font-bold tracking-tight text-foreground/90 group-hover:text-primary transition-colors mb-2 line-clamp-2">{c.title}</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {c.tags?.map(t => <span key={t} className="text-[10px] font-bold bg-muted/50 border border-border/50 text-muted-foreground px-2 py-0.5 rounded-md">{t}</span>)}
-                                    </div>
-                                </div>
-                                
-                                <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs font-bold text-muted-foreground relative z-10">
-                                    <span>Added {new Date(c.created_at).toLocaleDateString()}</span>
-                                    <button className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                        <ChevronRight size={16} />
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))
-                    ) : (
-                         <div className="col-span-full py-20 flex flex-col items-center justify-center bg-background/40 backdrop-blur-md border border-white/5 rounded-[3rem]">
-                            <Database size={48} className="mb-4 text-muted-foreground/30" />
-                            <p className="text-xl font-black tracking-tighter text-muted-foreground">Databases Empty</p>
-                            <p className="text-sm font-medium text-muted-foreground mt-2">Generate AI challenges to begin.</p>
-                        </div>
-                    )}
+                
+                <div className="header-actions">
+                    <button onClick={() => setShowGenModal(true)} style={{ display: 'flex', items: 'center', gap: '8px', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: '800' }}>
+                        <Zap size={18} /> Auto-Generate
+                    </button>
+                    <button style={{ display: 'flex', items: 'center', gap: '8px', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--border)', fontWeight: '700' }}>
+                        <Plus size={18} /> Manual Entry
+                    </button>
                 </div>
             </div>
+
+            {/* AI Preview Card */}
+            <AnimatePresence>
+                {previewChallenge && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="card"
+                        style={{ marginBottom: '2.5rem', borderColor: 'var(--success)', background: '#10b98105' }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: '#10b98120', color: 'var(--success)', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)' }} className="animate-pulse" /> AI Draft Generated
+                                </div>
+                                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>{previewChallenge.title}</h2>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={() => setPreviewChallenge(null)} style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Discard</button>
+                                <button onClick={handleSaveChallenge} style={{ background: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <CheckCircle size={18} /> Publish
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+                            <div style={{ padding: '1.25rem', background: 'white', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ padding: '0.5rem', background: '#4f46e510', color: 'var(--primary)', borderRadius: '8px' }}><ShieldAlert size={20}/></div>
+                                <div><p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', margin: '0 0 4px 0', textTransform: 'uppercase' }}>Difficulty</p><p style={{ margin: 0, fontWeight: '700' }}>{previewChallenge.difficulty}</p></div>
+                            </div>
+                            <div style={{ padding: '1.25rem', background: 'white', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ padding: '0.5rem', background: '#a855f710', color: '#a855f7', borderRadius: '8px' }}><Database size={20}/></div>
+                                <div><p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', margin: '0 0 4px 0', textTransform: 'uppercase' }}>Test Cases</p><p style={{ margin: 0, fontWeight: '700' }}>{previewChallenge.test_cases?.length || 0} Scenarios</p></div>
+                            </div>
+                            <div style={{ padding: '1.25rem', background: 'white', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ padding: '0.5rem', background: '#0ea5e910', color: '#0ea5e9', borderRadius: '8px' }}><Tags size={20}/></div>
+                                <div><p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', margin: '0 0 4px 0', textTransform: 'uppercase' }}>Topics</p><p style={{ margin: 0, fontWeight: '700', fontSize: '0.85rem' }}>{previewChallenge.tags?.join(', ')}</p></div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Challenges Grid */}
+            {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+                    <Loader2 size={40} className="animate-spin text-primary" style={{ marginBottom: '1rem', color: 'var(--primary)' }} />
+                    <p style={{ fontWeight: '700', fontSize: '1.1rem' }}>Fetching Databanks...</p>
+                </div>
+            ) : challenges.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                    {challenges.map((c, i) => (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            key={c.id} 
+                            className="card stat-card"
+                            style={{ display: 'flex', flexDirection: 'column' }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                                <span style={{ 
+                                    padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase',
+                                    background: c.difficulty === 'Easy' ? '#10b98115' : c.difficulty === 'Medium' ? '#f59e0b15' : '#ef444415',
+                                    color: c.difficulty === 'Easy' ? 'var(--success)' : c.difficulty === 'Medium' ? 'var(--warning)' : 'var(--danger)'
+                                }}>
+                                    {c.difficulty}
+                                </span>
+                                
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '6px' }}><Edit2 size={16} /></button>
+                                    <button onClick={() => deleteChallenge(c.id)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', padding: '6px' }}><Trash2 size={16} /></button>
+                                </div>
+                            </div>
+
+                            <div style={{ flex: 1, marginBottom: '1.5rem' }}>
+                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1.2rem', lineHeight: '1.4' }}>{c.title}</h3>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    {c.tags?.map(t => (
+                                        <span key={t} style={{ fontSize: '0.75rem', fontWeight: '600', background: 'var(--bg-main)', border: '1px solid var(--border)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px' }}>
+                                            {t}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>
+                                <span>Added {new Date(c.created_at).toLocaleDateString()}</span>
+                                <button style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#4f46e510', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            ) : (
+                 <div className="card" style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderStyle: 'dashed', borderWidth: '2px' }}>
+                    <Database size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                    <p style={{ fontSize: '1.25rem', fontWeight: '800', margin: '0 0 0.5rem 0' }}>Databases Empty</p>
+                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>Generate AI challenges to begin.</p>
+                </div>
+            )}
 
             {/* AI Generator Modal */}
             <AnimatePresence>
                 {showGenModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                         <motion.div 
                           initial={{ opacity: 0 }} 
                           animate={{ opacity: 1 }} 
                           exit={{ opacity: 0 }} 
                           onClick={() => setShowGenModal(false)}
-                          className="absolute inset-0 bg-background/80 backdrop-blur-xl" 
+                          style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)' }} 
                         />
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="w-full max-w-md relative z-60 p-8 rounded-[2.5rem] bg-background/90 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_-10px_rgba(var(--primary),0.3)] overflow-hidden"
+                            className="card"
+                            style={{ position: 'relative', width: '100%', maxWidth: '400px', zIndex: 1010, padding: '2rem' }}
                         >
-                            <div className="absolute -top-20 -right-20 w-48 h-48 bg-primary/20 rounded-full blur-3xl -z-10" />
-                            
-                            <h2 className="text-2xl font-black tracking-tight flex items-center gap-3 mb-6">
-                                <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner border border-primary/20"><Sparkles size={24} /></div>
+                            <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ padding: '0.5rem', borderRadius: '8px', background: '#4f46e510', color: 'var(--primary)', display: 'flex' }}><Sparkles size={20} /></div>
                                 Initialize AI
                             </h2>
                             
-                            <form onSubmit={handleGenerateAI} className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">Algorithmic Domain</label>
+                            <form onSubmit={handleGenerateAI} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label>Algorithmic Domain</label>
                                     <select 
                                         value={genConfig.topic}
                                         onChange={(e) => setGenConfig({...genConfig, topic: e.target.value})}
-                                        className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-4 py-3 text-sm font-bold focus:ring-4 ring-primary/10 outline-none shadow-inner"
                                         required
                                     >
                                         {dsaTopics.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 </div>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">Complexity Level</label>
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label>Complexity Level</label>
                                     <select 
                                         value={genConfig.difficulty}
                                         onChange={(e) => setGenConfig({...genConfig, difficulty: e.target.value})}
-                                        className="w-full bg-background/50 border border-border focus:border-primary/50 rounded-xl px-4 py-3 text-sm font-bold focus:ring-4 ring-primary/10 outline-none shadow-inner"
                                     >
                                         <option value="Easy">Easy (Recruit)</option>
                                         <option value="Medium">Medium (Veteran)</option>
@@ -247,10 +240,10 @@ const FacultyChallenges = () => {
                                     </select>
                                 </div>
                                 
-                                <div className="flex gap-3 pt-4 border-t border-border/50">
-                                    <button type="button" onClick={() => setShowGenModal(false)} className="flex-1 py-3 rounded-xl font-bold text-sm bg-muted/50 hover:bg-muted border border-border/50 transition-colors text-foreground">Cancel</button>
-                                    <button type="submit" disabled={generating} className="flex-[2] py-3 rounded-xl font-black text-sm bg-gradient-to-r from-primary to-purple-600 text-white shadow-xl hover:shadow-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50">
-                                        {generating ? <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" /> Processing</span> : 'Ignite Synapses'}
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
+                                    <button type="button" onClick={() => setShowGenModal(false)} style={{ flex: 1, background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--border)' }}>Cancel</button>
+                                    <button type="submit" disabled={generating} style={{ flex: 2, display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                        {generating ? <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Loader2 size={18} className="animate-spin" /> Processing</span> : 'Ignite Synapses'}
                                     </button>
                                 </div>
                             </form>
@@ -263,6 +256,3 @@ const FacultyChallenges = () => {
 };
 
 export default FacultyChallenges;
-
-// Helper component
-const ChevronRight = ({ size, className }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>;

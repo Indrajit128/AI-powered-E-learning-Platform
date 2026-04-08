@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BarChart3, Users, Trophy, Download, Search, CheckCircle2, ChevronRight, Activity, Percent, BookOpen } from 'lucide-react';
+import { BarChart3, Users, Trophy, Download, Search, CheckCircle2, ChevronLeft, Activity, Percent, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const ViewResults = () => {
   const { id } = useParams(); // Batch ID
+  const navigate = useNavigate();
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,108 +28,100 @@ const ViewResults = () => {
   }, [id]);
 
   return (
-    <div className="relative min-h-[calc(100vh-100px)] py-12 px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center">
-      {/* Ambient Orbs */}
-      <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-primary/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[0%] left-[-5%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-7xl relative z-10 space-y-10"
-      >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-2xl bg-background/50 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
-          
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center gap-3">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-cyan-400">Results</span> Intel
-              <Activity size={32} className="text-primary animate-pulse hidden md:block" />
-            </h1>
-            <p className="text-muted-foreground mt-2 font-medium tracking-wide flex items-center gap-2">
-               <BookOpen size={16} /> Detailed analytics for Cohort/Batch <span className="font-bold text-foreground">#{id}</span>
-            </p>
-          </div>
-          
-          <div className="relative z-10">
-            <button className="px-6 py-3 rounded-2xl font-black text-sm text-foreground bg-background/60 backdrop-blur-md border border-white/10 hover:border-primary/50 hover:bg-primary/5 shadow-xl flex items-center gap-2 transition-all">
-              <Download size={18} className="text-primary" /> Export Matrix (CSV)
-            </button>
-          </div>
+    <div className="fade-in" style={{ paddingBottom: '4rem' }}>
+      
+      {/* Header */}
+      <div className="flex-responsive" style={{ marginBottom: '2.5rem' }}>
+        <div>
+          <button 
+            onClick={() => navigate('/faculty')}
+            style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.5rem', cursor: 'pointer' }}
+          >
+            <ChevronLeft size={16} /> Back
+          </button>
+          <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            Results <span className="text-gradient">Directory</span>
+          </h1>
+          <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <BookOpen size={18} /> Analytics for Batch #{id}
+          </p>
         </div>
+        
+        <div className="header-actions">
+           <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', fontWeight: '800' }}>
+              <Download size={18} /> Export Matrix
+           </button>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/40 transition-colors" />
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner"><Users size={24} /></div>
-              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Submissions</div><div className="text-3xl font-black">{submissions.length}</div></div>
-            </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+        
+        {/* Stat Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
+            <div style={{ padding: '1rem', background: '#4f46e510', color: 'var(--primary)', borderRadius: '12px' }}><Users size={28} /></div>
+            <div><div style={{ fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '4px' }}>Submissions</div><div style={{ fontSize: '2rem', fontWeight: '900' }}>{submissions.length}</div></div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-success/20 rounded-full blur-2xl group-hover:bg-success/40 transition-colors" />
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 rounded-2xl bg-success/10 text-success border border-success/20 shadow-inner"><Trophy size={24} /></div>
-              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Class Average</div><div className="text-3xl font-black flex items-end gap-1">84<span className="text-sm pb-1 text-muted-foreground">%</span></div></div>
-            </div>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem', borderColor: 'var(--success)' }}>
+            <div style={{ padding: '1rem', background: '#10b98110', color: 'var(--success)', borderRadius: '12px' }}><Trophy size={28} /></div>
+            <div><div style={{ fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '4px' }}>Class Average</div><div style={{ fontSize: '2rem', fontWeight: '900', display: 'flex', alignItems: 'flex-end', gap: '4px' }}>84<span style={{ fontSize: '1rem', paddingBottom: '4px', color: 'var(--text-muted)' }}>%</span></div></div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/40 transition-colors" />
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 shadow-inner"><BarChart3 size={24} /></div>
-              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">High Achievers</div><div className="text-3xl font-black">12</div></div>
-            </div>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
+            <div style={{ padding: '1rem', background: '#0ea5e910', color: '#0ea5e9', borderRadius: '12px' }}><BarChart3 size={28} /></div>
+            <div><div style={{ fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '4px' }}>High Achievers</div><div style={{ fontSize: '2rem', fontWeight: '900' }}>12</div></div>
           </motion.div>
         </div>
 
-        <div className="rounded-[2.5rem] bg-background/50 backdrop-blur-2xl border border-white/10 shadow-2xl relative overflow-hidden">
-          <div className="px-8 py-6 border-b border-border/50 bg-muted/10 flex items-center justify-between">
-              <h3 className="text-xl font-black tracking-tight">Performance Directory</h3>
-              <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input type="text" placeholder="Search cadet..." className="pl-9 pr-4 py-2 rounded-xl bg-background border border-border/50 text-sm font-semibold outline-none focus:ring-2 ring-primary/20 shadow-inner" />
+        {/* Results Table */}
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'var(--bg-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800' }}>Performance Directory</h3>
+              <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input type="text" placeholder="Search cadet..." style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.9rem', outline: 'none' }} />
               </div>
           </div>
           
-          <div className="overflow-x-auto custom-scrollbar relative z-10">
-            <table className="w-full text-left border-collapse">
+          <div style={{ overflowX: 'auto' }} className="custom-scrollbar">
+            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
               <thead>
-                <tr className="border-b border-border/50 bg-background/40">
-                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Student Alpha</th>
-                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Comm Link (Email)</th>
-                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Score Rating</th>
-                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Timestamp</th>
-                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Status</th>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-main)' }}>
+                  <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Student</th>
+                  <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Email</th>
+                  <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Score</th>
+                  <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Timestamp</th>
+                  <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="5" className="py-12 text-center text-muted-foreground font-black tracking-widest animate-pulse">Decrypting Records...</td></tr>
+                  <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '700' }}>Loading records...</td></tr>
                 ) : submissions.length === 0 ? (
-                  <tr><td colSpan="5" className="py-12 text-center text-muted-foreground font-black tracking-widest">NO RECORDS FOUND</td></tr>
+                  <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '700' }}>NO RECORDS FOUND</td></tr>
                 ) : (
                   submissions.map((sub, i) => (
                     <motion.tr 
-                       initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
                        key={sub.id} 
-                       className="border-b border-border/20 hover:bg-muted/30 transition-colors group cursor-default"
+                       style={{ borderBottom: '1px solid var(--border)', background: 'white' }}
+                       className="hover:bg-muted/10 transition-colors"
                     >
-                      <td className="py-4 px-8 font-bold text-foreground/90 group-hover:text-primary transition-colors flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-black">{sub.student_name?.[0] || 'X'}</div>
+                      <td style={{ padding: '1rem 1.5rem', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#4f46e515', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '800' }}>{sub.student_name?.[0] || 'A'}</div>
                           {sub.student_name}
                       </td>
-                      <td className="py-4 px-8 text-sm font-medium text-muted-foreground">{sub.student_email}</td>
-                      <td className="py-4 px-8 font-black">
-                         <span className={`inline-flex items-center gap-1 ${Number(sub.score) >= 70 ? 'text-success' : 'text-warning'}`}>
-                             {sub.score}<Percent size={12}/>
+                      <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>{sub.student_email}</td>
+                      <td style={{ padding: '1rem 1.5rem', fontWeight: '800' }}>
+                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: Number(sub.score) >= 70 ? 'var(--success)' : 'var(--warning)' }}>
+                             {sub.score}<Percent size={14}/>
                          </span>
                       </td>
-                      <td className="py-4 px-8 text-xs font-semibold text-muted-foreground tracking-wide">{new Date(sub.submitted_at).toLocaleString()}</td>
-                      <td className="py-4 px-8 text-right">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-success/10 text-success border border-success/20 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                           <CheckCircle2 size={12} /> Graded
+                      <td style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>{new Date(sub.submitted_at).toLocaleString()}</td>
+                      <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '6px', background: '#10b98115', color: 'var(--success)', border: '1px solid #10b98130', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase' }}>
+                           <CheckCircle2 size={14} /> Graded
                         </span>
                       </td>
                     </motion.tr>
@@ -138,7 +131,7 @@ const ViewResults = () => {
             </table>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

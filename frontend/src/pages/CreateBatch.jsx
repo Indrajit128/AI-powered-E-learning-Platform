@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, Search, Plus, UserPlus, CheckCircle2, Loader2, X, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
+import { Users, Search, Plus, UserPlus, CheckCircle2, Loader2, X, BookOpen, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CreateBatch = () => {
@@ -73,172 +73,174 @@ const CreateBatch = () => {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-100px)] py-12 px-4 sm:px-6 overflow-hidden flex justify-center items-start">
-      {/* Background Orbs */}
-      <div className="absolute top-0 right-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="fade-in" style={{ paddingBottom: '4rem', maxWidth: '800px', margin: '0 auto' }}>
+      
+      <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+        <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+          Initialize <span className="text-gradient">Batch</span>
+        </h1>
+        <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>
+          Group your students into manageable cohorts.
+        </p>
+      </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 100 }}
-        className="w-full max-w-3xl relative z-10"
+        className="card"
       >
-        <div className="text-center mb-10">
-           <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center justify-center gap-3">
-             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">Initialize</span> Batch
-             <Sparkles size={36} className="text-primary animate-pulse" />
-           </h1>
-           <p className="text-muted-foreground mt-3 text-lg font-medium">Group your students into manageable cohorts.</p>
-        </div>
-        
-        <div className="p-8 md:p-10 rounded-[3rem] bg-background/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent pointer-events-none" />
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
-          <form onSubmit={handleCreate} className="relative z-10 space-y-8">
-            <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Batch Identifier</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                  <BookOpen size={20} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
-                </div>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Masterclass 2026-A" 
-                  value={name} 
-                  onChange={e => setName(e.target.value)} 
-                  required 
-                  className="w-full bg-background/80 backdrop-blur-sm border border-border/50 focus:border-primary/50 focus:ring-4 ring-primary/10 pl-14 pr-6 py-4 rounded-2xl text-lg font-bold outline-none transition-all shadow-inner placeholder:text-muted-foreground/50"
-                />
-              </div>
+          <div className="input-group" style={{ marginBottom: 0 }}>
+            <label>Batch Identifier</label>
+            <div style={{ position: 'relative' }}>
+               <BookOpen size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
+               <input 
+                 type="text" 
+                 placeholder="e.g. Masterclass 2026-A" 
+                 value={name} 
+                 onChange={e => setName(e.target.value)} 
+                 required 
+                 style={{ paddingLeft: '3rem', paddingRight: '1rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '1.1rem', fontWeight: '700' }}
+               />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-muted)' }}>Select Cadets</label>
+              <span style={{ fontSize: '0.75rem', padding: '4px 12px', background: '#4f46e510', color: 'var(--primary)', borderRadius: '20px', fontWeight: '700' }}>
+                {selectedStudents.length} Selected
+              </span>
             </div>
 
-            <div className="space-y-4">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center justify-between">
-                <span>Select Cadets</span>
-                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary">{selectedStudents.length} Selected</span>
-              </label>
-
-              {/* Selected Students Chips */}
-              <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-2xl bg-muted/20 border border-border/30">
-                <AnimatePresence>
-                  {selectedStudents.map(student => (
-                    <motion.div 
-                      key={student.id} 
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-purple-600 text-white pl-3 pr-1.5 py-1.5 rounded-xl text-xs font-bold shadow-md"
+            {/* Selected Students Chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '1rem', minHeight: '44px', background: 'var(--bg-main)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <AnimatePresence>
+                {selectedStudents.map(student => (
+                  <motion.div 
+                    key={student.id} 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    style={{ 
+                       display: 'inline-flex', alignItems: 'center', gap: '6px', 
+                       background: 'var(--primary)', color: 'white', 
+                       padding: '4px 8px 4px 12px', borderRadius: '8px', 
+                       fontSize: '0.8rem', fontWeight: '600' 
+                    }}
+                  >
+                    {student.name}
+                    <button 
+                      type="button" 
+                      onClick={() => toggleStudent(student)} 
+                      style={{ background: 'transparent', border: 'none', padding: '2px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {student.name}
-                      <button 
-                        type="button" 
-                        onClick={() => toggleStudent(student)} 
-                        className="p-1 rounded-lg hover:bg-white/20 transition-colors"
-                      >
-                        <X size={14} strokeWidth={3} />
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {selectedStudents.length === 0 && (
-                  <span className="text-sm font-medium text-muted-foreground/50 py-1.5 px-2">No students assigned to this batch yet.</span>
-                )}
-              </div>
+                      <X size={14} />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {selectedStudents.length === 0 && (
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '4px 8px' }}>No students assigned to this batch yet.</span>
+              )}
+            </div>
 
-              {/* Search Input */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                  <Search size={18} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
+            {/* Search Input */}
+            <div className="input-group">
+               <div style={{ position: 'relative' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--text-muted)' }} />
+                  <input 
+                    type="text" 
+                    placeholder="Filter directory by name or email..." 
+                    value={searchTerm} 
+                    onChange={e => setSearchTerm(e.target.value)} 
+                    style={{ paddingLeft: '3rem' }}
+                  />
+               </div>
+            </div>
+
+            {/* Students List */}
+            <div className="custom-scrollbar" style={{ height: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--bg-main)' }}>
+              {isLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                  <Loader2 size={32} className="animate-spin" style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
+                  <p style={{ fontWeight: '700' }}>Scanning Directory...</p>
                 </div>
-                <input 
-                  type="text" 
-                  placeholder="Filter directory by name or email..." 
-                  value={searchTerm} 
-                  onChange={e => setSearchTerm(e.target.value)} 
-                  className="w-full bg-background/50 border border-border/50 focus:border-primary/50 focus:ring-4 ring-primary/10 pl-12 pr-6 py-3 rounded-xl text-sm font-semibold outline-none transition-all shadow-inner placeholder:text-muted-foreground/60"
-                />
-              </div>
-
-              {/* Students List */}
-              <div className="h-[300px] overflow-y-auto rounded-3xl border border-border/50 bg-background/40 backdrop-blur-md custom-scrollbar relative">
-                {isLoading ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-                    <Loader2 size={32} className="animate-spin mb-3 text-primary" />
-                    <p className="font-bold tracking-tight">Scanning Directory...</p>
-                  </div>
-                ) : filteredStudents.length === 0 ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground/60">
-                    <Users size={48} className="mb-4 opacity-20" />
-                    <p className="font-bold">{searchTerm ? 'No matching cadets found.' : 'Directory is empty.'}</p>
-                  </div>
-                ) : (
-                  <div className="p-2 space-y-1">
-                    {filteredStudents.map(student => {
-                      const isSelected = selectedStudents.find(s => s.id === student.id);
-                      return (
-                        <div 
-                          key={student.id} 
-                          onClick={() => toggleStudent(student)}
-                          className={`p-4 rounded-2xl cursor-pointer flex items-center justify-between transition-all duration-300 border ${
-                            isSelected 
-                            ? 'bg-success/5 border-success text-success shadow-[0_0_15px_-3px_rgba(var(--success),0.2)]' 
-                            : 'bg-transparent border-transparent hover:bg-muted/50 hover:border-border/50 text-foreground/80'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg ${
-                              isSelected ? 'bg-success text-white shadow-inner' : 'bg-muted text-muted-foreground'
-                            }`}>
-                              {student.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className={`font-black text-base tracking-tight ${isSelected ? 'text-success' : 'text-foreground/90'}`}>
-                                {student.name}
-                              </div>
-                              <div className={`text-xs font-semibold ${isSelected ? 'text-success/70' : 'text-muted-foreground'}`}>
-                                {student.email}
-                              </div>
-                            </div>
+              ) : filteredStudents.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                  <Users size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                  <p style={{ fontWeight: '700' }}>{searchTerm ? 'No matching cadets found.' : 'Directory is empty.'}</p>
+                </div>
+              ) : (
+                <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {filteredStudents.map(student => {
+                    const isSelected = selectedStudents.find(s => s.id === student.id);
+                    return (
+                      <div 
+                        key={student.id} 
+                        onClick={() => toggleStudent(student)}
+                        style={{ 
+                          padding: '1rem', borderRadius: '8px', cursor: 'pointer', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          background: isSelected ? '#10b98110' : 'white',
+                          border: `1px solid ${isSelected ? 'var(--success)' : 'transparent'}`,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ 
+                             width: '40px', height: '40px', borderRadius: '10px', 
+                             display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                             fontWeight: '800', fontSize: '1.1rem',
+                             background: isSelected ? 'var(--success)' : '#f1f5f9',
+                             color: isSelected ? 'white' : 'var(--text-muted)'
+                          }}>
+                            {student.name.charAt(0)}
                           </div>
-                          
-                          <div className="pr-2">
-                            {isSelected ? (
-                              <CheckCircle2 size={24} className="text-success animate-in zoom-in" />
-                            ) : (
-                              <UserPlus size={20} className="text-muted-foreground/50" />
-                            )}
+                          <div>
+                            <div style={{ fontWeight: '800', fontSize: '1rem', color: isSelected ? 'var(--success)' : 'var(--text-main)' }}>
+                              {student.name}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: '500', color: isSelected ? '#10b98190' : 'var(--text-muted)' }}>
+                              {student.email}
+                            </div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                        
+                        <div>
+                          {isSelected ? (
+                            <CheckCircle2 size={24} color="var(--success)" />
+                          ) : (
+                            <UserPlus size={20} color="var(--border)" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          </div>
 
-            {error && (
-              <div className="px-4 py-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm font-bold flex items-center gap-2">
-                <AlertCircle size={18} /> {error}
-              </div>
+          {error && (
+            <div style={{ padding: '1rem', background: '#ef444415', border: '1px solid #ef444450', borderRadius: '8px', color: 'var(--danger)', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={18} /> {error}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={isSaving} 
+            style={{ width: '100%', padding: '1.25rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+          >
+            {isSaving ? (
+              <><Loader2 size={22} className="animate-spin" /> Initializing...</>
+            ) : (
+              <><CheckCircle2 size={22} /> Confirm & Deploy Batch</>
             )}
-
-            <button 
-              type="submit" 
-              disabled={isSaving} 
-              className="w-full group relative overflow-hidden px-8 py-5 rounded-2xl bg-foreground text-background disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                {isSaving ? (
-                  <><Loader2 size={22} className="animate-spin" /> <span className="font-black tracking-widest uppercase">Initializing...</span></>
-                ) : (
-                  <><CheckCircle2 size={22} className="group-hover:text-white" /> <span className="font-black tracking-widest uppercase group-hover:text-white transition-colors">Confirm & Deploy Batch</span></>
-                )}
-              </div>
-            </button>
-          </form>
-        </div>
+          </button>
+        </form>
       </motion.div>
     </div>
   );
