@@ -16,26 +16,34 @@ router.get('/assigned', auth, async (req, res) => {
             .eq('student_id', studentId);
 
         if (batchError) throw batchError;
-        const batchIds = batches.map(b => b.batch_id);
+        const batchIds = (batches || []).map(b => b.batch_id).filter(id => id);
 
-        // 2. Get assignments targeted to student OR their batches
+        // 2. Build the query to find assignments targeted to student OR their batches
+        let queryParts = [];
+        queryParts.push(`student_id.eq.${studentId}`);
+        if (batchIds.length > 0) {
+            queryParts.push(`batch_id.in.(${batchIds.join(',')})`);
+        }
+
+        // 3. Get targeted assignment IDs
         const { data: targets, error: targetError } = await supabase
             .from('assignment_targets')
             .select('assignment_id')
-            .or(`student_id.eq.${studentId}${batchIds.length > 0 ? `,batch_id.in.(${batchIds.join(',')})` : ''}`);
+            .or(queryParts.join(','));
 
         if (targetError) throw targetError;
-        const assignmentIds = [...new Set(targets.map(t => t.assignment_id))];
+        const assignmentIds = [...new Set((targets || []).map(t => t.assignment_id))];
 
         if (assignmentIds.length === 0) return res.json([]);
 
-        // 3. Get assignment details + check for submissions
+        // 4. Get assignment details + check for current student's submissions
         const { data: assignments, error: assignmentError } = await supabase
             .from('assignments')
             .select(`
                 *,
-                submissions (
+                submissions!assignment_id (
                     id,
+                    student_id,
                     status,
                     grade,
                     feedback,
@@ -47,16 +55,19 @@ router.get('/assigned', auth, async (req, res) => {
 
         if (assignmentError) throw assignmentError;
 
-        // Filter submissions to only include the current student's
-        const result = assignments.map(a => ({
-            ...a,
-            submission: a.submissions.find(s => s.student_id === studentId) || null,
-            submissions: undefined
-        }));
+        // 5. Clean up the data: Extract only the current student's submission from the array
+        const result = assignments.map(a => {
+            const mySubmission = (a.submissions || []).find(s => s.student_id === studentId);
+            const { submissions, ...assignmentData } = a; // Remove the full submissions list
+            return {
+                ...assignmentData,
+                submission: mySubmission || null
+            };
+        });
 
         res.json(result);
     } catch (err) {
-        console.error(err);
+        console.error('Fetch Student Assignments Error:', err);
         res.status(500).send('Server error');
     }
 });

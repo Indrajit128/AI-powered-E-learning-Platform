@@ -117,9 +117,12 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
         }
     }
 
-    // Convert empty strings from FormData to null
-    const targetBatch = (batchId && batchId !== 'undefined' && batchId !== '') ? batchId : null;
-    const targetStudent = (studentId && studentId !== 'undefined' && studentId !== '') ? studentId : null;
+    // Convert empty strings or 'undefined' from FormData to null
+    const isValidUUID = (id) => id && id !== 'undefined' && id !== 'null' && id !== '' && /^[0-9a-fA-F-]{36}$/.test(id);
+    const targetBatch = isValidUUID(batchId) ? batchId : null;
+    const targetStudent = isValidUUID(studentId) ? studentId : null;
+
+    console.log('Publish Attempt:', { title, type, targetBatch, targetStudent, hasFile: !!req.file });
 
     try {
         let fileUrl = null;
@@ -136,7 +139,7 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
 
             if (uploadError) {
                 console.error('Storage Error:', uploadError);
-                throw new Error('File upload failed: ' + uploadError.message);
+                return res.status(400).json({ msg: 'Storage Error: ' + uploadError.message });
             }
 
             // Get public URL
@@ -167,7 +170,11 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
         
         if (assignmentError) {
             console.error('Database Error (Assignment):', assignmentError);
-            return res.status(400).json({ msg: 'Database error: ' + assignmentError.message });
+            return res.status(400).json({ 
+                msg: 'Assignment Save Failed: ' + assignmentError.message,
+                details: assignmentError.details,
+                hint: assignmentError.hint
+            });
         }
 
         // 3. Create target(s)
@@ -182,6 +189,10 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
             
             if (targetError) {
                 console.error('Database Error (Targets):', targetError);
+                return res.status(400).json({ 
+                    msg: 'Targeting Failed: ' + targetError.message,
+                    details: targetError.details
+                });
             }
 
             // Notify via Socket.io
@@ -193,7 +204,7 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
         res.json(assignment);
     } catch (err) {
         console.error('Assignment Creation Catch Error:', err);
-        res.status(500).json({ msg: err.message || 'Server error during assignment publication' });
+        res.status(500).json({ msg: err.message || 'Internal Server Error' });
     }
 });
 
