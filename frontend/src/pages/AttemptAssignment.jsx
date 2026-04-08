@@ -33,18 +33,21 @@ const AttemptAssignment = () => {
 
   const handleSubmit = async () => {
     let calculatedScore = 0;
-    const questions = assignment.questions_json;
+    const questionsList = parsedQuestions;
     
     if (assignment.type === 'quiz') {
-      questions.forEach((q, i) => {
-        if (answers[i] === q.correctAnswer) calculatedScore += 1;
+      questionsList.forEach((q, i) => {
+        // q.correctAnswer might be an index or the exact string
+        if (answers[i] === q.options?.[q.correctAnswer] || answers[i] === q.correctAnswer) {
+           calculatedScore += 1;
+        }
       });
-      calculatedScore = (calculatedScore / questions.length) * 100;
+      calculatedScore = (calculatedScore / (questionsList.length || 1)) * 100;
     } else if (assignment.type === 'crossword') {
-      questions.words.forEach((w, i) => {
+      (questionsList.words || []).forEach((w, i) => {
         if ((answers[i] || '').toUpperCase() === w.answer.toUpperCase()) calculatedScore += 1;
       });
-      calculatedScore = (calculatedScore / questions.words.length) * 100;
+      calculatedScore = (calculatedScore / ((questionsList.words || []).length || 1)) * 100;
     } else if (assignment.type === 'coding') {
       // For coding, we check if they filled at least something significant
       const solution = answers[0] || '';
@@ -72,7 +75,19 @@ const AttemptAssignment = () => {
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}><Loader2 size={32} className="animate-spin" /></div>;
   if (!assignment) return <div>Assignment not found.</div>;
 
-  const questions = assignment.questions_json;
+  let parsedQuestions = [];
+  try {
+    const raw = typeof assignment.questions_json === 'string' ? JSON.parse(assignment.questions_json) : assignment.questions_json;
+    parsedQuestions = Array.isArray(raw) ? raw : (raw?.questions || raw);
+  } catch (e) {
+    console.error('Failed to parse questions', e);
+  }
+
+  const getQuestionCount = () => {
+    if (assignment.type === 'quiz') return parsedQuestions.length || 1;
+    return 1; // Coding/Crossword display as single page
+  };
+  const qCount = getQuestionCount();
 
   if (isSubmitted) return (
     <div className="fade-in" style={{ textAlign: 'center', maxWidth: '500px', margin: '5rem auto' }}>
@@ -93,12 +108,12 @@ const AttemptAssignment = () => {
           <span style={{ fontSize: '0.8rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '4px', fontWeight: '600' }}>{assignment.type.toUpperCase()}</span>
         </div>
         <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          Question <strong>{currentIdx + 1}</strong> of {questions.length}
+          Question <strong>{currentIdx + 1}</strong> of {qCount}
         </div>
       </div>
 
       <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', marginBottom: '2.5rem', overflow: 'hidden' }}>
-        <div style={{ width: `${((currentIdx + 1) / questions.length) * 100}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s ease' }}></div>
+        <div style={{ width: `${((currentIdx + 1) / qCount) * 100}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s ease' }}></div>
       </div>
 
       <div className="card" style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -110,11 +125,11 @@ const AttemptAssignment = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            {assignment.type === 'quiz' && (
+            {assignment.type === 'quiz' && parsedQuestions[currentIdx] && (
               <div>
-                <h3 style={{ marginBottom: '2rem' }}>{questions[currentIdx].question}</h3>
+                <h3 style={{ marginBottom: '2rem' }}>{parsedQuestions[currentIdx].question || parsedQuestions[currentIdx].sentence}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {questions[currentIdx].options.map((opt, i) => (
+                  {(parsedQuestions[currentIdx].options || []).map((opt, i) => (
                     <div 
                       key={i} 
                       onClick={() => setAnswers({...answers, [currentIdx]: opt})}
@@ -144,15 +159,15 @@ const AttemptAssignment = () => {
                 <h3 style={{ marginBottom: '1.5rem' }}>Solve the Crossword Clues</h3>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Enter the correct word for each clue based on the subject: <strong>{assignment.subject}</strong></p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {questions.words.map((word, i) => (
+                  {(parsedQuestions.words || []).map((word, i) => (
                     <div key={i} className="input-group">
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                        {i + 1}. {word.clue} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({word.answer.length} letters, {word.orientation})</span>
+                        {i + 1}. {word.clue} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({word.answer?.length} letters, {word.orientation})</span>
                       </label>
                       <input 
                         type="text" 
                         placeholder="ENTER WORD" 
-                        maxLength={word.answer.length}
+                        maxLength={word.answer?.length || 50}
                         value={answers[i] || ''} 
                         onChange={(e) => setAnswers({...answers, [i]: e.target.value.toUpperCase()})}
                         style={{ textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700', fontSize: '1.1rem' }}
@@ -166,17 +181,17 @@ const AttemptAssignment = () => {
             {assignment.type === 'coding' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <h3 style={{ marginBottom: '0.5rem' }}>{questions.title}</h3>
-                  <p style={{ marginBottom: '1rem' }}>{questions.description}</p>
+                  <h3 style={{ marginBottom: '0.5rem' }}>{parsedQuestions.title || 'Coding Challenge'}</h3>
+                  <p style={{ marginBottom: '1rem' }}>{parsedQuestions.description || 'Complete the functionality.'}</p>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    <strong>Constraints:</strong> {questions.constraints}
+                    <strong>Constraints:</strong> {parsedQuestions.constraints || 'None'}
                   </div>
                 </div>
 
                 <div className="input-group">
                   <label style={{ display: 'block', marginBottom: '0.5rem' }}>Write your solution here:</label>
                   <textarea 
-                    value={answers[0] || questions.initialCode} 
+                    value={answers[0] || parsedQuestions.initialCode || ''} 
                     onChange={(e) => setAnswers({...answers, 0: e.target.value})}
                     style={{ 
                       minHeight: '300px', 
@@ -191,11 +206,13 @@ const AttemptAssignment = () => {
                   />
                 </div>
 
-                <div style={{ background: '#f1f5f9', padding: '1rem', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Example Test Case:</div>
-                  <div style={{ fontSize: '0.8rem' }}><strong>Input:</strong> {questions.testCases[0].input}</div>
-                  <div style={{ fontSize: '0.8rem' }}><strong>Output:</strong> {questions.testCases[0].output}</div>
-                </div>
+                {parsedQuestions.testCases && parsedQuestions.testCases[0] && (
+                  <div style={{ background: '#f1f5f9', padding: '1rem', borderRadius: '8px' }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Example Test Case:</div>
+                    <div style={{ fontSize: '0.8rem' }}><strong>Input:</strong> {parsedQuestions.testCases[0].input}</div>
+                    <div style={{ fontSize: '0.8rem' }}><strong>Output:</strong> {parsedQuestions.testCases[0].output}</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -212,7 +229,7 @@ const AttemptAssignment = () => {
             <ArrowLeft size={18} /> Previous
           </button>
           
-          {currentIdx === questions.length - 1 ? (
+          {currentIdx === qCount - 1 ? (
             <button onClick={handleSubmit} style={{ background: 'var(--success)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
               Submit Assignment <CheckCircle2 size={18} />
             </button>

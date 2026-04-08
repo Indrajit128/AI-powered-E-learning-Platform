@@ -22,6 +22,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
 
 const FacultyDashboard = () => {
   const [batches, setBatches] = useState([]);
@@ -42,6 +43,31 @@ const FacultyDashboard = () => {
 
   useEffect(() => {
     fetchData();
+
+    // Socket.io for Real-time features
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    
+    // Auth token contains user id, we will decode it minimally to join the faculty room
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            socket.emit('join_faculty', payload.user.id);
+        } catch(e) {}
+    }
+
+    socket.on('new_submission', (submission) => {
+      setSubmissions(prev => {
+        // If it already exists (e.g. an update), replace it
+        const exists = prev.find(s => s.id === submission.id);
+        if (exists) {
+            return prev.map(s => s.id === submission.id ? submission : s);
+        }
+        return [submission, ...prev];
+      });
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   const fetchData = async () => {

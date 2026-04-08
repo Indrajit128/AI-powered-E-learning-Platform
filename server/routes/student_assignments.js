@@ -159,6 +159,21 @@ router.post('/submit', auth, async (req, res) => {
             if (error) throw error;
             result = data;
         }
+        // Find faculty id to emit
+        const { data: assignmentData } = await supabase
+            .from('assignments')
+            .select('created_by, title')
+            .eq('id', assignmentId)
+            .single();
+
+        if (assignmentData && global.io) {
+            // Emitting to specific faculty's room
+            global.io.to(`faculty_${assignmentData.created_by}`).emit('new_submission', {
+                ...result,
+                assignment_title: assignmentData.title,
+                student_name: req.user.name || 'A Student'
+            });
+        }
 
         res.json(result);
     } catch (err) {
