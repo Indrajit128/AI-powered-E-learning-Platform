@@ -4,7 +4,36 @@ import axios from 'axios';
 import { Trophy, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AttemptAssignment = () => {
+import React, { Component } from 'react';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', background: '#fee2e2', color: '#991b1b', borderRadius: '12px', margin: '2rem auto', maxWidth: '800px' }}>
+          <h2>Quiz Renderer Crashed</h2>
+          <p>The AI generated content that could not be parsed. Error details:</p>
+          <pre style={{ background: '#fef2f2', padding: '1rem', marginTop: '1rem', overflowX: 'auto', fontSize: '0.8rem' }}>
+            {this.state.error?.toString()}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const AttemptAssignmentCore = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [assignment, setAssignment] = useState(null);
@@ -33,25 +62,31 @@ const AttemptAssignment = () => {
 
   const handleSubmit = async () => {
     let calculatedScore = 0;
-    const questionsList = parsedQuestions;
+    let questionsList = parsedQuestions || [];
     
     if (assignment.type === 'quiz') {
+      if (!Array.isArray(questionsList)) questionsList = [questionsList];
       questionsList.forEach((q, i) => {
-        // q.correctAnswer might be an index or the exact string
-        if (answers[i] === q.options?.[q.correctAnswer] || answers[i] === q.correctAnswer) {
+        if (!q) return;
+        const correctOpt = q.options ? q.options[q.correctAnswer] : null;
+        if (
+          String(answers[i] || '').trim().toLowerCase() === String(correctOpt || '').trim().toLowerCase() ||
+          String(answers[i] || '').trim().toLowerCase() === String(q.correctAnswer || '').trim().toLowerCase()
+        ) {
            calculatedScore += 1;
         }
       });
-      calculatedScore = (calculatedScore / (questionsList.length || 1)) * 100;
+      calculatedScore = questionsList.length > 0 ? (calculatedScore / questionsList.length) * 100 : 0;
     } else if (assignment.type === 'crossword') {
-      (questionsList.words || []).forEach((w, i) => {
-        if ((answers[i] || '').toUpperCase() === w.answer.toUpperCase()) calculatedScore += 1;
+      const words = Array.isArray(questionsList) ? questionsList : (questionsList.words || []);
+      words.forEach((w, i) => {
+        if (String(answers[i] || '').trim().toUpperCase() === String(w.answer || '').trim().toUpperCase()) calculatedScore += 1;
       });
-      calculatedScore = (calculatedScore / ((questionsList.words || []).length || 1)) * 100;
+      calculatedScore = words.length > 0 ? (calculatedScore / words.length) * 100 : 0;
     } else if (assignment.type === 'coding') {
       // For coding, we check if they filled at least something significant
       const solution = answers[0] || '';
-      calculatedScore = solution.length > 50 ? 100 : 0;
+      calculatedScore = solution.length > 10 ? 100 : 0;
     } else {
       calculatedScore = 100;
     }
@@ -77,10 +112,22 @@ const AttemptAssignment = () => {
 
   let parsedQuestions = [];
   try {
-    const raw = typeof assignment.questions_json === 'string' ? JSON.parse(assignment.questions_json) : assignment.questions_json;
-    parsedQuestions = Array.isArray(raw) ? raw : (raw?.questions || raw);
+    let raw = assignment.questions_json;
+    if (typeof raw === 'string') raw = JSON.parse(raw);
+    if (typeof raw === 'string') raw = JSON.parse(raw); // Catch double stringified JSON from AI
+    
+    if (Array.isArray(raw)) {
+      parsedQuestions = raw;
+    } else if (raw && typeof raw === 'object') {
+      parsedQuestions = raw.questions || raw;
+    }
+
+    if (assignment.type === 'quiz' && !Array.isArray(parsedQuestions)) {
+      parsedQuestions = [parsedQuestions];
+    }
   } catch (e) {
     console.error('Failed to parse questions', e);
+    parsedQuestions = [{ question: 'Failed to load assignment content.', options: [], correctAnswer: 0 }];
   }
 
   const getQuestionCount = () => {
@@ -105,7 +152,7 @@ const AttemptAssignment = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h2 style={{ margin: 0 }}>{assignment.title}</h2>
-          <span style={{ fontSize: '0.8rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '4px', fontWeight: '600' }}>{assignment.type.toUpperCase()}</span>
+          <span style={{ fontSize: '0.8rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '4px', fontWeight: '600' }}>{String(assignment.type || 'assignment').toUpperCase()}</span>
         </div>
         <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
           Question <strong>{currentIdx + 1}</strong> of {qCount}
@@ -127,9 +174,9 @@ const AttemptAssignment = () => {
           >
             {assignment.type === 'quiz' && parsedQuestions[currentIdx] && (
               <div>
-                <h3 style={{ marginBottom: '2rem' }}>{parsedQuestions[currentIdx].question || parsedQuestions[currentIdx].sentence}</h3>
+                <h3 style={{ marginBottom: '2rem' }}>{parsedQuestions[currentIdx]?.question || parsedQuestions[currentIdx]?.sentence || 'Question Missing'}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {(parsedQuestions[currentIdx].options || []).map((opt, i) => (
+                  {(parsedQuestions[currentIdx]?.options || []).map((opt, i) => (
                     <div 
                       key={i} 
                       onClick={() => setAnswers({...answers, [currentIdx]: opt})}
@@ -146,7 +193,7 @@ const AttemptAssignment = () => {
                         transition: 'all 0.2s'
                       }}
                     >
-                      {opt}
+                      {typeof opt === 'object' ? (opt.text || opt.value || JSON.stringify(opt)) : opt}
                       {answers[currentIdx] === opt && <CheckCircle2 size={18} color="var(--primary)" />}
                     </div>
                   ))}
@@ -159,7 +206,7 @@ const AttemptAssignment = () => {
                 <h3 style={{ marginBottom: '1.5rem' }}>Solve the Crossword Clues</h3>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Enter the correct word for each clue based on the subject: <strong>{assignment.subject}</strong></p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {(parsedQuestions.words || []).map((word, i) => (
+                  {(Array.isArray(parsedQuestions) ? parsedQuestions : (parsedQuestions?.words || [])).map((word, i) => (
                     <div key={i} className="input-group">
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
                         {i + 1}. {word.clue} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({word.answer?.length} letters, {word.orientation})</span>
@@ -241,6 +288,14 @@ const AttemptAssignment = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const AttemptAssignment = () => {
+  return (
+    <ErrorBoundary>
+      <AttemptAssignmentCore />
+    </ErrorBoundary>
   );
 };
 
