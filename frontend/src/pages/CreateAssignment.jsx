@@ -141,6 +141,11 @@ const CreateAssignment = () => {
         setError('Please add at least one question or item');
         return;
     }
+
+    if (!formData.batchId && !formData.studentId) {
+        setError('Please select a target audience (Batch or Student)');
+        return;
+    }
     
     setIsSaving(true);
     try {
@@ -148,8 +153,18 @@ const CreateAssignment = () => {
       const fd = new FormData();
       
       // Append core fields
-      Object.keys(formData).forEach(key => fd.append(key, formData[key]));
+      Object.keys(formData).forEach(key => {
+        if (formData[key]) fd.append(key, formData[key]);
+      });
       
+      // Explicitly set assignment type based on mode
+      const typeMap = {
+          'ai': 'ai-generated',
+          'manual': 'manual',
+          'upload': 'file'
+      };
+      fd.append('type', typeMap[creationMode] || 'manual');
+
       // Append mode-specific fields
       if (creationMode === 'upload' && uploadFile) {
         fd.append('file', uploadFile);
@@ -158,10 +173,7 @@ const CreateAssignment = () => {
       }
 
       await axios.post('/api/faculty/assignments', fd, {
-        headers: { 
-            'x-auth-token': token,
-            'Content-Type': 'multipart/form-data'
-        },
+        headers: { 'x-auth-token': token },
         onUploadProgress: (progressEvent) => {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(progress);
@@ -170,7 +182,7 @@ const CreateAssignment = () => {
       
       navigate('/faculty');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to publish assignment. Check your connection.');
+      setError(err.response?.data?.msg || err.response?.data || 'Failed to publish assignment. Check your connection.');
     } finally {
       setIsSaving(false);
     }

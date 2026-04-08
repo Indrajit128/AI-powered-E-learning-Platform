@@ -108,20 +108,25 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
     let { title, subject, type, description, batchId, studentId, questionsJson, dueDate } = req.body;
     
     // Parse questionsJson if it's sent as a string (happens in multipart form data)
-    if (typeof questionsJson === 'string') {
+    if (typeof questionsJson === 'string' && questionsJson !== 'undefined') {
         try {
             questionsJson = JSON.parse(questionsJson);
         } catch (e) {
+            console.error('JSON Parse Error:', e);
             questionsJson = null;
         }
     }
+
+    // Convert empty strings from FormData to null
+    const targetBatch = (batchId && batchId !== 'undefined' && batchId !== '') ? batchId : null;
+    const targetStudent = (studentId && studentId !== 'undefined' && studentId !== '') ? studentId : null;
 
     try {
         let fileUrl = null;
 
         // 1. Handle file upload if present
         if (req.file) {
-            const fileName = `${Date.now()}_${req.file.originalname}`;
+            const fileName = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('assignments')
                 .upload(fileName, req.file.buffer, {
@@ -129,7 +134,10 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
                     upsert: true
                 });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('Storage Error:', uploadError);
+                throw new Error('File upload failed: ' + uploadError.message);
+            }
 
             // Get public URL
             const { data: publicUrlData } = supabase.storage
@@ -140,45 +148,52 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
         }
 
         // 2. Create the assignment
+        const insertData = { 
+            title: title || 'Untitled Assignment', 
+            subject: subject || 'General', 
+            type: fileUrl ? 'file' : (type || 'manual'), 
+            description: description || '',
+            questions_json: questionsJson || null,
+            file_url: fileUrl,
+            due_date: (dueDate && dueDate !== 'undefined' && dueDate !== '') ? dueDate : null,
+            created_by: req.user.id
+        };
+
         const { data: assignment, error: assignmentError } = await supabase
             .from('assignments')
-            .insert([{ 
-                title, 
-                subject, 
-                type: fileUrl ? 'file' : type, 
-                description,
-                questions_json: questionsJson,
-                file_url: fileUrl,
-                due_date: dueDate,
-                created_by: req.user.id
-            }])
+            .insert([insertData])
             .select()
             .single();
         
-        if (assignmentError) throw assignmentError;
+        if (assignmentError) {
+            console.error('Database Error (Assignment):', assignmentError);
+            return res.status(400).json({ msg: 'Database error: ' + assignmentError.message });
+        }
 
         // 3. Create target(s)
-        if (batchId || studentId) {
+        if (targetBatch || targetStudent) {
             const { error: targetError } = await supabase
                 .from('assignment_targets')
                 .insert([{
                     assignment_id: assignment.id,
-                    batch_id: batchId || null,
-                    student_id: studentId || null
+                    batch_id: targetBatch,
+                    student_id: targetStudent
                 }]);
             
-            if (targetError) throw targetError;
+            if (targetError) {
+                console.error('Database Error (Targets):', targetError);
+            }
 
             // Notify via Socket.io
-            if (batchId && global.io) {
-                global.io.to(`batch_${batchId}`).emit('new_assignment', assignment);
+            if (targetBatch && global.io) {
+                global.io.to(`batch_${targetBatch}`).emit('new_assignment', assignment);
             }
         }
 
         res.json(assignment);
     } catch (err) {
-        console.error('Assignment Creation Error:', err);
-        res.status(500).send('Server error: ' + err.message);
+        console.error('Assignment Creation Catch Error:', err);
+        res.status(500).json({ msg: err.message || 'Server error during assignment publication' });
     }
 });
 
