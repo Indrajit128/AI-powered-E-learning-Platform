@@ -19,7 +19,8 @@ import {
   Loader2,
   Trash2,
   Edit,
-  GraduationCap
+  GraduationCap,
+  Zap
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
