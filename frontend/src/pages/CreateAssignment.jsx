@@ -37,6 +37,10 @@ const CreateAssignment = () => {
     dueDate: ''
   });
   
+  const [creationMode, setCreationMode] = useState('ai'); // 'ai', 'manual', 'upload'
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const [generatedContent, setGeneratedContent] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -93,9 +97,25 @@ const CreateAssignment = () => {
 
   const handleGenerate = async () => {
     if (!formData.title || (!formData.batchId && !formData.studentId)) {
-      setError('Please fill in Title and Target (Batch or Student) before generating');
+      setError('Please fill in Title and Target (Batch or Student) before proceeding');
       return;
     }
+
+    if (creationMode === 'manual') {
+      setGeneratedContent([]);
+      setStep(2);
+      return;
+    }
+
+    if (creationMode === 'upload') {
+      if (!uploadFile) {
+        setError('Please select a file to upload');
+        return;
+      }
+      setStep(2);
+      return;
+    }
+
     setError('');
     setIsGenerating(true);
     try {
@@ -117,19 +137,40 @@ const CreateAssignment = () => {
   };
 
   const handleSave = async () => {
-    if (!generatedContent) return;
+    if (creationMode !== 'upload' && (!generatedContent || generatedContent.length === 0)) {
+        setError('Please add at least one question or item');
+        return;
+    }
+    
     setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/faculty/assignments', {
-        ...formData,
-        questionsJson: generatedContent
-      }, {
-        headers: { 'x-auth-token': token }
+      const fd = new FormData();
+      
+      // Append core fields
+      Object.keys(formData).forEach(key => fd.append(key, formData[key]));
+      
+      // Append mode-specific fields
+      if (creationMode === 'upload' && uploadFile) {
+        fd.append('file', uploadFile);
+      } else {
+        fd.append('questionsJson', JSON.stringify(generatedContent));
+      }
+
+      await axios.post('/api/faculty/assignments', fd, {
+        headers: { 
+            'x-auth-token': token,
+            'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(progress);
+        }
       });
+      
       navigate('/faculty');
     } catch (err) {
-      setError('Failed to publish assignment. Check your connection.');
+      setError(err.response?.data?.msg || 'Failed to publish assignment. Check your connection.');
     } finally {
       setIsSaving(false);
     }
@@ -185,6 +226,31 @@ const CreateAssignment = () => {
                 exit={{ opacity: 0, x: -20, scale: 0.95 }}
                 style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
               >
+                {/* Creation Mode Selector */}
+                <div className="card" style={{ padding: '1rem' }}>
+                   <div style={{ display: 'flex', gap: '4px', background: '#f8fafc', padding: '4px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                      {[
+                        { id: 'ai', label: 'AI Assist', icon: Sparkles },
+                        { id: 'manual', label: 'Manual', icon: Edit2 },
+                        { id: 'upload', label: 'Upload', icon: Save }
+                      ].map(mode => (
+                        <button
+                          key={mode.id}
+                          onClick={() => setCreationMode(mode.id)}
+                          style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                            padding: '10px', fontSize: '0.85rem', fontWeight: '700', borderRadius: '8px', border: 'none', transition: 'all 0.2s',
+                            background: creationMode === mode.id ? 'white' : 'transparent',
+                            color: creationMode === mode.id ? 'var(--primary)' : 'var(--text-muted)',
+                            boxShadow: creationMode === mode.id ? 'var(--shadow)' : 'none'
+                          }}
+                        >
+                          <mode.icon size={16} /> {mode.label}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
                 {/* Core Configuration */}
                 <div className="card">
                   <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -212,28 +278,57 @@ const CreateAssignment = () => {
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                     <div className="input-group" style={{ marginBottom: 0 }}>
-                        <label>Subject Domain</label>
-                        <select 
-                          value={formData.subject} 
-                          onChange={e => setFormData({...formData, subject: e.target.value})}
-                        >
-                          <option value="Artificial Intelligence">AI Mastery</option>
-                          <option value="Full Stack Development">Full Stack Dev</option>
-                          <option value="Data Structures">Data Structures</option>
-                          <option value="Cloud Computing">Cloud Computing</option>
-                        </select>
-                     </div>
-                     <div className="input-group" style={{ marginBottom: 0 }}>
-                        <label>Deadline Date</label>
-                        <input 
-                          type="date" 
-                          value={formData.dueDate} 
-                          onChange={e => setFormData({...formData, dueDate: e.target.value})}
-                        />
-                     </div>
-                  </div>
+                  {creationMode === 'upload' ? (
+                    <div className="input-group">
+                      <label>Attach Assignment File</label>
+                      <div 
+                        style={{ border: '2px dashed var(--border)', borderRadius: '12px', padding: '2rem', textAlign: 'center', background: uploadFile ? '#4f46e505' : 'white', cursor: 'pointer' }}
+                        onClick={() => document.getElementById('fileInput').click()}
+                      >
+                         <input 
+                            id="fileInput"
+                            type="file" 
+                            style={{ display: 'none' }} 
+                            onChange={e => setUploadFile(e.target.files[0])}
+                         />
+                         {uploadFile ? (
+                           <div>
+                              <div style={{ color: 'var(--primary)', fontWeight: '700' }}>{uploadFile.name}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to change file</div>
+                           </div>
+                         ) : (
+                           <div>
+                              <Save size={32} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                              <div style={{ fontWeight: '600' }}>Click to Browse</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PDF, DOCX, or Images allowed</div>
+                           </div>
+                         )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="input-group" style={{ marginBottom: 0 }}>
+                          <label>Subject Domain</label>
+                          <select 
+                            value={formData.subject} 
+                            onChange={e => setFormData({...formData, subject: e.target.value})}
+                          >
+                            <option value="Artificial Intelligence">AI Mastery</option>
+                            <option value="Full Stack Development">Full Stack Dev</option>
+                            <option value="Data Structures">Data Structures</option>
+                            <option value="Cloud Computing">Cloud Computing</option>
+                          </select>
+                      </div>
+                      <div className="input-group" style={{ marginBottom: 0 }}>
+                          <label>Deadline Date</label>
+                          <input 
+                            type="date" 
+                            value={formData.dueDate} 
+                            onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                          />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Audience Targeting */}
@@ -281,7 +376,7 @@ const CreateAssignment = () => {
                 </div>
               </motion.div>
             ) : (
-              /* AI Controls (Step 2) */
+              /* Settings & Controls (Step 2) */
               <motion.div 
                 key="step2-controls"
                 initial={{ opacity: 0, x: -20, scale: 0.95 }}
@@ -289,51 +384,74 @@ const CreateAssignment = () => {
                 exit={{ opacity: 0, x: 20 }}
                 style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
               >
-                 <div className="card" style={{ borderColor: 'var(--success)', background: '#10b98105' }}>
-                    <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <BrainCircuit color="var(--success)" size={20} /> AI Refinement
-                    </h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                      Content looks good? You can still tweak the parameters and regenerate if needed to adjust difficulty or style.
-                    </p>
+                 {creationMode === 'ai' && (
+                    <div className="card" style={{ borderColor: 'var(--success)', background: '#10b98105' }}>
+                        <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <BrainCircuit color="var(--success)" size={20} /> AI Refinement
+                        </h3>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                        Content looks good? You can still tweak the parameters and regenerate if needed to adjust difficulty or style.
+                        </p>
 
-                    <div className="input-group">
-                       <label>Difficulty Level</label>
-                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          {['beginner', 'intermediate', 'advanced'].map(l => (
-                            <button
-                              type="button"
-                              key={l}
-                              onClick={() => setFormData({...formData, level: l})}
-                              style={{
-                                flex: 1, padding: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase', borderRadius: '8px', 
-                                background: formData.level === l ? 'var(--primary)' : 'white',
-                                color: formData.level === l ? 'white' : 'var(--text-main)',
-                                border: `1px solid ${formData.level === l ? 'var(--primary)' : 'var(--border)'}`
-                              }}
-                            >
-                              {l}
-                            </button>
-                          ))}
-                       </div>
+                        <div className="input-group">
+                        <label>Difficulty Level</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {['beginner', 'intermediate', 'advanced'].map(l => (
+                                <button
+                                type="button"
+                                key={l}
+                                onClick={() => setFormData({...formData, level: l})}
+                                style={{
+                                    flex: 1, padding: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase', borderRadius: '8px', 
+                                    background: formData.level === l ? 'var(--primary)' : 'white',
+                                    color: formData.level === l ? 'white' : 'var(--text-main)',
+                                    border: `1px solid ${formData.level === l ? 'var(--primary)' : 'var(--border)'}`
+                                }}
+                                >
+                                {l}
+                                </button>
+                            ))}
+                        </div>
+                        </div>
+
+                        <button 
+                        onClick={handleGenerate} 
+                        disabled={isGenerating} 
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'white', color: 'var(--text-main)', border: '1px solid var(--border)' }}
+                        >
+                        {isGenerating ? <Loader2 size={18} className="animate-spin" color="var(--primary)" /> : <><Wand2 size={18} color="var(--primary)" /> Regenerate All</>}
+                        </button>
                     </div>
+                 )}
 
-                    <button 
-                       onClick={handleGenerate} 
-                       disabled={isGenerating} 
-                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'white', color: 'var(--text-main)', border: '1px solid var(--border)' }}
-                     >
-                       {isGenerating ? <Loader2 size={18} className="animate-spin" color="var(--primary)" /> : <><Wand2 size={18} color="var(--primary)" /> Regenerate All</>}
-                     </button>
-                 </div>
+                 {creationMode === 'upload' && (
+                    <div className="card" style={{ borderColor: 'var(--primary)', background: '#4f46e505' }}>
+                        <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                           <Save color="var(--primary)" size={20} /> File Upload
+                        </h3>
+                        <div style={{ padding: '1rem', background: 'white', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>File to Upload:</div>
+                           <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{uploadFile?.name}</div>
+                        </div>
+                        {isSaving && (
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s' }} />
+                                </div>
+                                <div style={{ textAlign: 'right', fontSize: '0.7rem', marginTop: '4px', color: 'var(--text-muted)' }}>{uploadProgress}% Uploaded</div>
+                            </div>
+                        )}
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Your file will be safely stored in the cloud and accessible to your students instantly.</p>
+                    </div>
+                 )}
 
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <button 
                       onClick={handleSave} 
-                      disabled={isSaving || !generatedContent} 
+                      disabled={isSaving || (creationMode !== 'upload' && !generatedContent)} 
                       style={{ width: '100%', padding: '1rem', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                       {isSaving ? <><Loader2 size={22} className="animate-spin" /> Publishing...</> : <><Save size={20} /> PUBLISH ASSIGNMENT</>}
+                       {isSaving ? <><Loader2 size={22} className="animate-spin" /> {creationMode === 'upload' ? 'Uploading...' : 'Publishing...'}</> : <><Save size={20} /> PUBLISH ASSIGNMENT</>}
                     </button>
                     
                     <button 
@@ -348,7 +466,7 @@ const CreateAssignment = () => {
           </AnimatePresence>
         </div>
 
-        {/* Content Preview (Step 1 Placeholder / Step 2 Generated Content) */}
+        {/* Content Preview (Step 1 Placeholder / Step 2 Contents) */}
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
            <div className="card" style={{ flex: 1, padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: '600px', background: step === 1 ? '#f8fafc' : 'white', borderStyle: step === 1 ? 'dashed' : 'solid', borderWidth: step === 1 ? '2px' : '1px' }}>
               
@@ -356,12 +474,12 @@ const CreateAssignment = () => {
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem' }}>
                   {step === 2 && <CheckCircle2 size={24} color="var(--success)" />} 
                   <span style={{ color: step === 1 ? 'var(--text-muted)' : 'var(--text-main)' }}>
-                     {step === 1 ? 'AI Intelligence Scope' : 'Generated Curriculum'}
+                     {creationMode === 'upload' ? 'File Attachment' : (step === 1 ? 'Scope & Strategy' : 'Direct Curriculum')}
                   </span>
                 </h3>
-                {generatedContent && (
+                {((creationMode === 'ai' && generatedContent) || (creationMode === 'upload' && uploadFile)) && (
                   <span style={{ padding: '4px 12px', background: '#10b98115', color: 'var(--success)', fontSize: '0.75rem', fontWeight: '800', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} className="animate-pulse" /> AI Ready
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} className="animate-pulse" /> {creationMode === 'upload' ? 'File Ready' : 'AI Ready'}
                   </span>
                 )}
               </div>
@@ -370,12 +488,14 @@ const CreateAssignment = () => {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', textAlign: 'center' }}>
                    
                    <div style={{ padding: '1.5rem', background: '#4f46e510', borderRadius: '50%', marginBottom: '2rem' }}>
-                      <Wand2 size={48} color="var(--primary)" />
+                      {creationMode === 'upload' ? <Save size={48} color="var(--primary)" /> : (creationMode === 'manual' ? <Edit2 size={48} color="var(--primary)" /> : <Wand2 size={48} color="var(--primary)" />)}
                    </div>
                    
-                   <h2 style={{ margin: '0 0 1rem 0', fontSize: '2rem', fontWeight: '800' }}>Ready to summon the AI?</h2>
+                   <h2 style={{ margin: '0 0 1rem 0', fontSize: '2rem', fontWeight: '800' }}>
+                     {creationMode === 'upload' ? 'Ready to upload your file?' : (creationMode === 'manual' ? 'Ready to build manually?' : 'Ready to summon the AI?')}
+                   </h2>
                    <p style={{ color: 'var(--text-muted)', maxWidth: '400px', lineHeight: '1.6', marginBottom: '2.5rem' }}>
-                     Complete the configuration panel on the left. Our specialized AI engine will craft tailored, high-quality material for your students in seconds.
+                     {creationMode === 'upload' ? 'Select your document from the configuration panel on the left. We support PDF, Images and DOCX format.' : 'Complete the configuration panel on the left. We will set everything up for your next step in seconds.'}
                    </p>
                    
                    <button 
@@ -383,7 +503,7 @@ const CreateAssignment = () => {
                       disabled={isGenerating || !formData.title || (!formData.batchId && !formData.studentId)}
                       style={{ padding: '1rem 2rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}
                    >
-                      {isGenerating ? <><Loader2 size={24} className="animate-spin" /> GENERATING...</> : <><Sparkles size={24} /> GENERATE CONTENT</>}
+                      {isGenerating ? <><Loader2 size={24} className="animate-spin" /> INITIALIZING...</> : <><Sparkles size={24} /> {creationMode === 'ai' ? 'GENERATE CONTENT' : 'CONTINUE TO BUILD'}</>}
                    </button>
                    {error && <p style={{ color: 'var(--danger)', background: '#ef444410', padding: '0.5rem 1rem', borderRadius: '8px', marginTop: '1.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}><AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom' }}/> {error}</p>}
                 </div>
@@ -393,19 +513,32 @@ const CreateAssignment = () => {
                   animate={{ opacity: 1 }}
                   style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                 >
-                  <div style={{ padding: '0.75rem 2rem', background: '#10b98110', borderBottom: '1px solid #10b98130', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <div style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: '600' }}>
-                        <BrainCircuit size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} />
-                        Intelligence Report: Successfully materialized <strong style={{ padding: '2px 6px', background: 'rgba(16,185,129,0.2)', borderRadius: '4px' }}>{generatedContent?.length || 0}</strong> items tailored for "{formData.subject}".
-                     </div>
-                     <button onClick={() => { setGeneratedContent(null); setStep(1); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '4px', cursor: 'pointer' }} title="Discard Content">
-                        <Trash2 size={16} />
-                     </button>
-                  </div>
+                  {creationMode !== 'upload' && (
+                    <div style={{ padding: '0.75rem 2rem', background: '#10b98110', borderBottom: '1px solid #10b98130', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: '600' }}>
+                            <BrainCircuit size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} />
+                            {creationMode === 'ai' ? 'Intelligence Report: Materialized ' : 'Manual Builder: Constructing '} 
+                            <strong style={{ padding: '2px 6px', background: 'rgba(16,185,129,0.2)', borderRadius: '4px' }}>{generatedContent?.length || 0}</strong> items.
+                        </div>
+                        <button onClick={() => { setGeneratedContent(null); setStep(1); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '4px', cursor: 'pointer' }} title="Discard Content">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                  )}
 
                   <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-main)' }} className="custom-scrollbar">
                     
-                    {Array.isArray(generatedContent) ? (
+                    {creationMode === 'upload' ? (
+                       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.5rem' }}>
+                          <div style={{ width: '80px', height: '80px', background: '#4f46e510', color: 'var(--primary)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             <Save size={40} />
+                          </div>
+                          <div>
+                            <h2 style={{ margin: '0 0 0.5rem 0' }}>File Attached Successfully</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>Ready to publish: <strong>{uploadFile?.name}</strong></p>
+                          </div>
+                       </div>
+                    ) : Array.isArray(generatedContent) ? (
                       <>
                         {generatedContent.map((item, i) => (
                           <motion.div 

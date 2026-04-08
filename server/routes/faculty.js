@@ -98,21 +98,57 @@ router.post('/generate-assignment', auth, facultyOnly, async (req, res) => {
     }
 });
 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
 // @route   POST /api/faculty/assignments
-// @desc    Save and publish an assignment
-router.post('/assignments', auth, facultyOnly, async (req, res) => {
-    const { title, subject, type, description, batchId, studentId, questionsJson, dueDate } = req.body;
+// @desc    Save and publish an assignment (Handles AI, Manual, and File Upload)
+router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req, res) => {
+    // When using multer, text fields are in req.body
+    let { title, subject, type, description, batchId, studentId, questionsJson, dueDate } = req.body;
+    
+    // Parse questionsJson if it's sent as a string (happens in multipart form data)
+    if (typeof questionsJson === 'string') {
+        try {
+            questionsJson = JSON.parse(questionsJson);
+        } catch (e) {
+            questionsJson = null;
+        }
+    }
 
     try {
-        // 1. Create the assignment
+        let fileUrl = null;
+
+        // 1. Handle file upload if present
+        if (req.file) {
+            const fileName = `${Date.now()}_${req.file.originalname}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('assignments')
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: publicUrlData } = supabase.storage
+                .from('assignments')
+                .getPublicUrl(fileName);
+            
+            fileUrl = publicUrlData.publicUrl;
+        }
+
+        // 2. Create the assignment
         const { data: assignment, error: assignmentError } = await supabase
             .from('assignments')
             .insert([{ 
                 title, 
                 subject, 
-                type, 
+                type: fileUrl ? 'file' : type, 
                 description,
                 questions_json: questionsJson,
+                file_url: fileUrl,
                 due_date: dueDate,
                 created_by: req.user.id
             }])
@@ -121,7 +157,7 @@ router.post('/assignments', auth, facultyOnly, async (req, res) => {
         
         if (assignmentError) throw assignmentError;
 
-        // 2. Create target(s)
+        // 3. Create target(s)
         if (batchId || studentId) {
             const { error: targetError } = await supabase
                 .from('assignment_targets')
@@ -133,7 +169,7 @@ router.post('/assignments', auth, facultyOnly, async (req, res) => {
             
             if (targetError) throw targetError;
 
-            // Notify via Socket.io if batch is targeted
+            // Notify via Socket.io
             if (batchId && global.io) {
                 global.io.to(`batch_${batchId}`).emit('new_assignment', assignment);
             }
@@ -141,8 +177,8 @@ router.post('/assignments', auth, facultyOnly, async (req, res) => {
 
         res.json(assignment);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
+        console.error('Assignment Creation Error:', err);
+        res.status(500).send('Server error: ' + err.message);
     }
 });
 

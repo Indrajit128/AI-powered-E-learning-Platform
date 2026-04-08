@@ -172,33 +172,62 @@ const AttemptAssignmentCore = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            {assignment.type === 'quiz' && parsedQuestions[currentIdx] && (
-              <div>
-                <h3 style={{ marginBottom: '2rem' }}>{parsedQuestions[currentIdx]?.question || parsedQuestions[currentIdx]?.sentence || 'Question Missing'}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {(parsedQuestions[currentIdx]?.options || []).map((opt, i) => (
-                    <div 
-                      key={i} 
-                      onClick={() => setAnswers({...answers, [currentIdx]: opt})}
-                      style={{
-                        padding: '1.25rem',
-                        border: '2px solid ' + (answers[currentIdx] === opt ? 'var(--primary)' : 'var(--border)'),
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        background: answers[currentIdx] === opt ? '#4f46e505' : 'transparent',
-                        fontWeight: answers[currentIdx] === opt ? '600' : '400',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {typeof opt === 'object' ? (opt.text || opt.value || JSON.stringify(opt)) : opt}
-                      {answers[currentIdx] === opt && <CheckCircle2 size={18} color="var(--primary)" />}
-                    </div>
-                  ))}
-                </div>
+            {/* File Assignment View */}
+            {assignment.file_url && (
+              <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '12px', border: '1px solid var(--border)', textAlign: 'center', marginBottom: '2rem' }}>
+                <Trophy size={48} color="var(--primary)" style={{ marginBottom: '1.5rem' }} />
+                <h3>Attached Material</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>This assignment has a reference document attached by your faculty.</p>
+                <a 
+                  href={assignment.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--primary)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: '700' }}
+                >
+                   <Save size={18} /> View / Download Document
+                </a>
               </div>
+            )}
+
+            {assignment.type === 'file' && !assignment.questions_json && (
+                <div className="input-group">
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700' }}>Submit your response / notes here:</label>
+                    <textarea 
+                        placeholder="Write your answer or summary of the attached file..."
+                        value={answers[0] || ''} 
+                        onChange={(e) => setAnswers({...answers, 0: e.target.value})}
+                        style={{ minHeight: '250px' }}
+                    />
+                </div>
+            )}
+
+            {assignment.type === 'quiz' && parsedQuestions[currentIdx] && (
+               <div>
+                 <h3 style={{ marginBottom: '2rem' }}>{parsedQuestions[currentIdx]?.question || parsedQuestions[currentIdx]?.sentence || 'Question Missing'}</h3>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                   {(parsedQuestions[currentIdx]?.options || []).map((opt, i) => (
+                     <div 
+                       key={i} 
+                       onClick={() => setAnswers({...answers, [currentIdx]: opt})}
+                       style={{
+                         padding: '1.25rem',
+                         border: '2px solid ' + (answers[currentIdx] === opt ? 'var(--primary)' : 'var(--border)'),
+                         borderRadius: '12px',
+                         cursor: 'pointer',
+                         background: answers[currentIdx] === opt ? '#4f46e505' : 'transparent',
+                         fontWeight: answers[currentIdx] === opt ? '600' : '400',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'space-between',
+                         transition: 'all 0.2s'
+                       }}
+                     >
+                       {typeof opt === 'object' ? (opt.text || opt.value || JSON.stringify(opt)) : opt}
+                       {answers[currentIdx] === opt && <CheckCircle2 size={18} color="var(--primary)" />}
+                     </div>
+                   ))}
+                 </div>
+               </div>
             )}
 
             {assignment.type === 'crossword' && (
