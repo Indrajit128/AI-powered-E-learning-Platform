@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 
 const sendOTP = async (email, otp) => {
   const mailOptions = {
-    from: `"EduERP Platform" <${process.env.SMTP_USER}>`,  // Platform name instead of raw email
+    from: `"EduERP Platform" <${process.env.SMTP_USER || 'indrajitkshirsagar128@gmail.com'}>`,  // Platform name instead of raw email
     to: email,
     subject: '🔐 Your EduERP Verification Code',
     html: `
