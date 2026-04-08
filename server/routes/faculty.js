@@ -122,8 +122,6 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
     const targetBatch = isValidUUID(batchId) ? batchId : null;
     const targetStudent = isValidUUID(studentId) ? studentId : null;
 
-    console.log('Publish Attempt:', { title, type, targetBatch, targetStudent, hasFile: !!req.file });
-
     try {
         let fileUrl = null;
 
@@ -139,10 +137,9 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
 
             if (uploadError) {
                 console.error('Storage Error:', uploadError);
-                return res.status(400).json({ msg: 'Storage Error: ' + uploadError.message });
+                return res.status(400).json({ msg: 'File upload failed: ' + uploadError.message });
             }
 
-            // Get public URL
             const { data: publicUrlData } = supabase.storage
                 .from('assignments')
                 .getPublicUrl(fileName);
@@ -169,12 +166,8 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
             .single();
         
         if (assignmentError) {
-            console.error('Database Error (Assignment):', assignmentError);
-            return res.status(400).json({ 
-                msg: 'Assignment Save Failed: ' + assignmentError.message,
-                details: assignmentError.details,
-                hint: assignmentError.hint
-            });
+            console.error('Database Error:', assignmentError);
+            return res.status(400).json({ msg: 'Failed to save assignment: ' + assignmentError.message });
         }
 
         // 3. Create target(s)
@@ -188,14 +181,9 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
                 }]);
             
             if (targetError) {
-                console.error('Database Error (Targets):', targetError);
-                return res.status(400).json({ 
-                    msg: 'Targeting Failed: ' + targetError.message,
-                    details: targetError.details
-                });
+                console.error('Targeting Error:', targetError);
             }
 
-            // Notify via Socket.io
             if (targetBatch && global.io) {
                 global.io.to(`batch_${targetBatch}`).emit('new_assignment', assignment);
             }
@@ -203,8 +191,8 @@ router.post('/assignments', auth, facultyOnly, upload.single('file'), async (req
 
         res.json(assignment);
     } catch (err) {
-        console.error('Assignment Creation Catch Error:', err);
-        res.status(500).json({ msg: err.message || 'Internal Server Error' });
+        console.error('Assignment Creation Error:', err);
+        res.status(500).json({ msg: 'Internal Server Error' });
     }
 });
 
