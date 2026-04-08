@@ -84,7 +84,8 @@ router.post('/register', async (req, res) => {
         res.json({ msg: 'Registration successful. OTP sent to email.' });
     } catch (err) {
         console.error('Register error:', err);
-        res.status(500).json({ msg: 'Server error during registration' });
+        require('fs').appendFileSync('auth_error_log.txt', new Date().toISOString() + ' Register error: ' + (err.stack || err.message) + '\n');
+        res.status(500).json({ msg: `Server error during registration: ${err.message}` });
     }
 });
 
@@ -145,7 +146,8 @@ router.post('/verify-otp', async (req, res) => {
         res.json({ msg: 'Email verified successfully', token, user: fullUser });
     } catch (err) {
         console.error('OTP verify error:', err);
-        res.status(500).json({ msg: 'Verification failed' });
+        require('fs').appendFileSync('auth_error_log.txt', new Date().toISOString() + ' OTP verify error: ' + (err.stack || err.message) + '\n');
+        res.status(500).json({ msg: `Verification failed: ${err.message}` });
     }
 });
 

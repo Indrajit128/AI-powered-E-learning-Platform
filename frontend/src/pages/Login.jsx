@@ -22,7 +22,8 @@ const Login = ({ setUser }) => {
       const targetRoute = res.data.user.role === 'admin' ? '/admin' : res.data.user.role === 'faculty' ? '/faculty' : '/student';
       navigate(targetRoute);
     } catch (err) {
-      setError(err.response?.data?.msg || 'Login failed');
+      console.error('Login error:', err);
+      setError(err.response?.data?.msg || err.message || 'Login failed');
     }
   };
 
