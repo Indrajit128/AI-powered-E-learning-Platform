@@ -47,7 +47,8 @@ const OnlineQuizzes = () => {
       setTopic('');
       fetchQuizzes();
     } catch (err) {
-      alert('Failed to generate quiz. AI might be busy!');
+      const errorMsg = err.response?.data?.error || 'AI is currently overloaded. Please try again in a few minutes.';
+      alert('Generation Failed: ' + errorMsg);
     } finally {
       setGenerating(false);
     }
