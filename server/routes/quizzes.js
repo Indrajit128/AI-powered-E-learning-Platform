@@ -47,10 +47,11 @@ router.post('/generate', auth, async (req, res) => {
 
         res.json({ message: 'Quiz generated successfully', quizId: quiz.id });
     } catch (err) {
-        console.error('Quiz Generation Error:', err);
-        const errorMsg = err.message.includes('AI') 
-            ? 'The AI Engine failed to generate questions. Please try a different topic.'
-            : 'Database error: Failed to save the generated quiz. Ensure tables are created.';
+        console.error('Quiz Generation Error Details:', err);
+        const dbError = err.message || 'Unknown database error';
+        const errorMsg = err.message?.includes('AI') 
+            ? 'The AI Engine failed to generate questions.' 
+            : `Database Error: ${dbError}. Please ensure all tables are created correctly.`;
         res.status(500).json({ error: errorMsg });
     }
 });
