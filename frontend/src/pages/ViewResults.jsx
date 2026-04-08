@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { BarChart3, Users, Trophy, Download } from 'lucide-react';
+import { BarChart3, Users, Trophy, Download, Search, CheckCircle2, ChevronRight, Activity, Percent, BookOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const ViewResults = () => {
   const { id } = useParams(); // Batch ID
@@ -26,73 +27,118 @@ const ViewResults = () => {
   }, [id]);
 
   return (
-    <div className="fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Assignment Results</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Detailed performance analytics for Batch #{id}</p>
-        </div>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid var(--border)', color: 'var(--text-main)' }}>
-          <Download size={18} /> Export CSV
-        </button>
-      </div>
+    <div className="relative min-h-[calc(100vh-100px)] py-12 px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center">
+      {/* Ambient Orbs */}
+      <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-primary/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[0%] left-[-5%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: '#4f46e510', color: 'var(--primary)', padding: '1rem', borderRadius: '12px' }}><Users size={24} /></div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-7xl relative z-10 space-y-10"
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-2xl bg-background/50 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+          
           <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>{submissions.length}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>SUBMISSIONS</div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center gap-3">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-cyan-400">Results</span> Intel
+              <Activity size={32} className="text-primary animate-pulse hidden md:block" />
+            </h1>
+            <p className="text-muted-foreground mt-2 font-medium tracking-wide flex items-center gap-2">
+               <BookOpen size={16} /> Detailed analytics for Cohort/Batch <span className="font-bold text-foreground">#{id}</span>
+            </p>
+          </div>
+          
+          <div className="relative z-10">
+            <button className="px-6 py-3 rounded-2xl font-black text-sm text-foreground bg-background/60 backdrop-blur-md border border-white/10 hover:border-primary/50 hover:bg-primary/5 shadow-xl flex items-center gap-2 transition-all">
+              <Download size={18} className="text-primary" /> Export Matrix (CSV)
+            </button>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: '#10b98110', color: 'var(--success)', padding: '1rem', borderRadius: '12px' }}><Trophy size={24} /></div>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>84%</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>AVG SCORE</div>
-          </div>
-        </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: '#0ea5e910', color: 'var(--secondary)', padding: '1rem', borderRadius: '12px' }}><BarChart3 size={24} /></div>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>12</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>TOP PERFORMERS</div>
-          </div>
-        </div>
-      </div>
 
-      <div className="card" style={{ padding: '0' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)', background: '#f8fafc' }}>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>STUDENT NAME</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>EMAIL</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>SCORE</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>SUBMITTED AT</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan="5" style={{ padding: '2rem', textAlign: 'center' }}>Loading results...</td></tr>
-            ) : submissions.length === 0 ? (
-              <tr><td colSpan="5" style={{ padding: '2rem', textAlign: 'center' }}>No submissions yet.</td></tr>
-            ) : (
-              submissions.map(sub => (
-                <tr key={sub.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{sub.student_name}</td>
-                  <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{sub.student_email}</td>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: '700', color: Number(sub.score) >= 70 ? 'var(--success)' : 'var(--warning)' }}>{sub.score}%</td>
-                  <td style={{ padding: '1rem 1.5rem', fontSize: '0.85rem' }}>{new Date(sub.submitted_at).toLocaleString()}</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600', background: '#dcfce7', color: '#166534' }}>GRADED</span>
-                  </td>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/40 transition-colors" />
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="p-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner"><Users size={24} /></div>
+              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Submissions</div><div className="text-3xl font-black">{submissions.length}</div></div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-success/20 rounded-full blur-2xl group-hover:bg-success/40 transition-colors" />
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="p-4 rounded-2xl bg-success/10 text-success border border-success/20 shadow-inner"><Trophy size={24} /></div>
+              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Class Average</div><div className="text-3xl font-black flex items-end gap-1">84<span className="text-sm pb-1 text-muted-foreground">%</span></div></div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="p-6 rounded-[2rem] bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/40 transition-colors" />
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 shadow-inner"><BarChart3 size={24} /></div>
+              <div><div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">High Achievers</div><div className="text-3xl font-black">12</div></div>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="rounded-[2.5rem] bg-background/50 backdrop-blur-2xl border border-white/10 shadow-2xl relative overflow-hidden">
+          <div className="px-8 py-6 border-b border-border/50 bg-muted/10 flex items-center justify-between">
+              <h3 className="text-xl font-black tracking-tight">Performance Directory</h3>
+              <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input type="text" placeholder="Search cadet..." className="pl-9 pr-4 py-2 rounded-xl bg-background border border-border/50 text-sm font-semibold outline-none focus:ring-2 ring-primary/20 shadow-inner" />
+              </div>
+          </div>
+          
+          <div className="overflow-x-auto custom-scrollbar relative z-10">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border/50 bg-background/40">
+                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Student Alpha</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Comm Link (Email)</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Score Rating</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Timestamp</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Status</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="5" className="py-12 text-center text-muted-foreground font-black tracking-widest animate-pulse">Decrypting Records...</td></tr>
+                ) : submissions.length === 0 ? (
+                  <tr><td colSpan="5" className="py-12 text-center text-muted-foreground font-black tracking-widest">NO RECORDS FOUND</td></tr>
+                ) : (
+                  submissions.map((sub, i) => (
+                    <motion.tr 
+                       initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                       key={sub.id} 
+                       className="border-b border-border/20 hover:bg-muted/30 transition-colors group cursor-default"
+                    >
+                      <td className="py-4 px-8 font-bold text-foreground/90 group-hover:text-primary transition-colors flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-black">{sub.student_name?.[0] || 'X'}</div>
+                          {sub.student_name}
+                      </td>
+                      <td className="py-4 px-8 text-sm font-medium text-muted-foreground">{sub.student_email}</td>
+                      <td className="py-4 px-8 font-black">
+                         <span className={`inline-flex items-center gap-1 ${Number(sub.score) >= 70 ? 'text-success' : 'text-warning'}`}>
+                             {sub.score}<Percent size={12}/>
+                         </span>
+                      </td>
+                      <td className="py-4 px-8 text-xs font-semibold text-muted-foreground tracking-wide">{new Date(sub.submitted_at).toLocaleString()}</td>
+                      <td className="py-4 px-8 text-right">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-success/10 text-success border border-success/20 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                           <CheckCircle2 size={12} /> Graded
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
