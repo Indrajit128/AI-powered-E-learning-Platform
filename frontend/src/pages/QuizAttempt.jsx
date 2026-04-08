@@ -2,9 +2,32 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight, ChevronLeft, Flag, HelpCircle, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight, ChevronLeft, Flag, HelpCircle, Loader2, Layout, Info } from 'lucide-react';
+import React, { Component } from 'react';
 
-const QuizAttempt = () => {
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', background: '#fee2e2', color: '#991b1b', borderRadius: '12px', margin: '2rem auto', maxWidth: '800px' }}>
+          <h2>Quiz View Crashed</h2>
+          <p>Please contact support or try regenerating this quiz. Details:</p>
+          <pre style={{ background: '#fef2f2', padding: '1rem', marginTop: '1rem', overflowX: 'auto', fontSize: '0.8rem' }}>{this.state.error?.toString()}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const QuizAttemptCore = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [quiz, setQuiz] = useState(null);
@@ -283,6 +306,14 @@ const QuizAttempt = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+const QuizAttempt = () => {
+    return (
+        <ErrorBoundary>
+            <QuizAttemptCore />
+        </ErrorBoundary>
     );
 };
 

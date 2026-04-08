@@ -1,4 +1,4 @@
-const generateQuestionsAI = require('./services/geminiService');
+const { generateQuestionsAI } = require('./services/geminiService');
 const supabase = require('./config');
 
 exports.generateQuestions = async (req, res) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trophy, BarChart3, Clock, CheckCircle2, ChevronRight, TrendingUp, Zap, Target } from 'lucide-react';
+import { Trophy, BarChart3, Clock, CheckCircle2, ChevronRight, TrendingUp, Zap, Target, BrainCircuit, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   AreaChart, 
@@ -20,6 +20,9 @@ import { motion } from 'framer-motion';
 const Performance = () => {
   const [performance, setPerformance] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [studyPlan, setStudyPlan] = useState(null);
+  const [studyPlanLoading, setStudyPlanLoading] = useState(true);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     const fetchPerformance = async () => {
@@ -35,7 +38,23 @@ const Performance = () => {
         setLoading(false);
       }
     };
+    
+    const fetchStudyPlan = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/student/study-plan', {
+          headers: { 'x-auth-token': token }
+        });
+        setStudyPlan(res.data);
+      } catch (err) {
+        console.error('Error fetching study plan:', err);
+      } finally {
+        setStudyPlanLoading(false);
+      }
+    };
+
     fetchPerformance();
+    fetchStudyPlan();
   }, []);
 
   const avgScore = performance.length > 0 ? (performance.reduce((acc, curr) => acc + Number(curr.score), 0) / performance.length).toFixed(1) : 0;
@@ -156,19 +175,67 @@ const Performance = () => {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '2rem', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>AI Learning Assistant</h3>
+      <div className="card" style={{ padding: '2rem', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, flex: '1 1 300px' }}>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}><BrainCircuit /> AI Learning Assistant</h3>
           <p style={{ opacity: 0.9, maxWidth: '600px', lineHeight: '1.6', fontSize: '1.1rem' }}>
-            "You've shown consistent growth in Computer Networks over the last 3 assignments. To reach the next level, 
-            focus on improving your <strong>C Programming</strong> logic, specifically in memory allocation and recursion."
+            {studyPlanLoading ? "Analyzing your academic portfolio..." : `"${studyPlan?.summary || "Keep up the great work! Let's build a focused plan to improve your skills further."}"`}
           </p>
-          <button style={{ marginTop: '1.5rem', background: 'white', color: 'var(--primary)', fontWeight: '700', padding: '0.75rem 1.5rem' }}>Generate Custom Study Plan</button>
+          <button onClick={() => setShowPlanModal(true)} disabled={studyPlanLoading} style={{ marginTop: '1.5rem', background: 'white', color: 'var(--primary)', fontWeight: '700', padding: '0.75rem 1.5rem', opacity: studyPlanLoading ? 0.7 : 1, border: 'none', borderRadius: '12px', cursor: studyPlanLoading ? 'default' : 'pointer' }}>Generate Custom Study Plan</button>
         </div>
-        <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', opacity: 0.1 }}>
-          <BrainCircuit size={180} />
+        <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', opacity: 0.1, pointerEvents: 'none' }}>
+          <BrainSVG size={180} />
         </div>
       </div>
+
+      {showPlanModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }} 
+            className="card" 
+            style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative', borderRadius: '24px' }}
+          >
+            <button onClick={() => setShowPlanModal(false)} style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: '#f1f5f9', border: 'none', padding: '8px', borderRadius: '50%', color: 'var(--text-main)', cursor: 'pointer' }}>
+               <X size={20} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem', color: 'var(--primary)' }}>
+               <BrainCircuit size={32} />
+               <h2 style={{ fontSize: '1.75rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>Your AI Study Plan</h2>
+            </div>
+            
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', lineHeight: '1.6', marginBottom: '2rem' }}>{studyPlan?.summary}</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ background: '#f0fdf4', padding: '1.25rem', borderRadius: '16px' }}>
+                <h4 style={{ color: 'var(--success)', marginBottom: '0.75rem' }}>Strengths</h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(studyPlan?.strengths || []).map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              </div>
+              <div style={{ background: '#fef2f2', padding: '1.25rem', borderRadius: '16px' }}>
+                <h4 style={{ color: 'var(--danger)', marginBottom: '0.75rem' }}>Focus Areas</h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(studyPlan?.weaknesses || []).map((w, i) => <li key={i}>{w}</li>)}
+                </ul>
+              </div>
+            </div>
+
+            <h3 style={{ marginBottom: '1.25rem' }}>Weekly Roadmap</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+               {(studyPlan?.plan || []).map((day, idx) => (
+                 <div key={idx} style={{ display: 'flex', gap: '1.5rem', padding: '1.25rem', border: '1px solid var(--border)', borderRadius: '16px', background: '#f8fafc' }}>
+                    <div style={{ minWidth: '100px', fontWeight: '800', color: 'var(--primary)' }}>{day.day}</div>
+                    <div>
+                      <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>{day.focus}</div>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>{day.action}</div>
+                    </div>
+                 </div>
+               ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
@@ -193,7 +260,7 @@ const StatCard = ({ title, value, icon, trend, color }) => (
   </motion.div>
 );
 
-const BrainCircuit = ({ size }) => (
+const BrainSVG = ({ size }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0 .94 4.82 2.5 2.5 0 0 0 0 4.28 2.5 2.5 0 0 0-1.04 4.86 2.5 2.5 0 0 0 1.98 3.32 2.5 2.5 0 0 0 4.96-.34"/><path d="M12 4.5V21"/><path d="M12 4.5a2.5 2.5 0 0 1 4.96-.46 2.5 2.5 0 0 1 1.98 3 2.5 2.5 0 0 1-.94 4.82 2.5 2.5 0 0 1 0 4.28 2.5 2.5 0 0 1 1.04 4.86 2.5 2.5 0 0 1-1.98 3.32 2.5 2.5 0 0 1-4.96-.34"/><path d="M9 10h1"/><path d="M14 10h1"/><path d="M9 14h1"/><path d="M14 14h1"/><path d="M9 18h1"/><path d="M14 18h1"/></svg>
 );
 
