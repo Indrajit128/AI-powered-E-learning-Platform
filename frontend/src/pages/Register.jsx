@@ -29,13 +29,14 @@ const Register = ({ setUser }) => {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', { 
+      const res = await axios.post('/api/auth/register', { 
         name, email, password, role 
       });
       setSuccessMsg(res.data.msg);
       setStep('otp');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Registration failed. Please try again.');
+      console.error('Registration API Error:', err);
+      setError(err.response?.data?.msg || err.message || 'Registration failed.');
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,7 @@ const Register = ({ setUser }) => {
     setLoading(true);
     try {
       // verify-otp now returns token + full user object directly
-      const res = await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp });
+      const res = await axios.post('/api/auth/verify-otp', { email, otp });
       
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -56,7 +57,8 @@ const Register = ({ setUser }) => {
       const targetRoute = res.data.user.role === 'admin' ? '/admin' : res.data.user.role === 'faculty' ? '/faculty' : '/student';
       navigate(targetRoute);
     } catch (err) {
-      setError(err.response?.data?.msg || 'OTP verification failed. Please try again.');
+      console.error('OTP Verify Error:', err);
+      setError(err.response?.data?.msg || err.message || 'OTP verification failed.');
     } finally {
       setLoading(false);
     }
@@ -66,11 +68,12 @@ const Register = ({ setUser }) => {
     setResending(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/resend-otp', { email });
+      const res = await axios.post('/api/auth/resend-otp', { email });
       setSuccessMsg(res.data.msg);
       setOtp('');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to resend OTP');
+      console.error('Resend OTP Error:', err);
+      setError(err.response?.data?.msg || err.message || 'Failed to resend OTP');
     } finally {
       setResending(false);
     }
