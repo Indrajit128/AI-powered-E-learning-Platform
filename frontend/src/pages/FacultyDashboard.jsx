@@ -92,11 +92,25 @@ const FacultyDashboard = () => {
       setAssignments(assignmentsRes.data || []);
       setSubmissions(submissionsRes.data || []);
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
+      console.error('CRITICAL: Faculty dashboard data fetch failed:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Safe checks for rendering
+  const isDataAvailable = batches && students && assignments && submissions;
+
+  useEffect(() => {
+    if (!loading) {
+        console.log('FacultyDashboard: Data loaded', { 
+            batchesCount: batches?.length, 
+            studentsCount: students?.length, 
+            assignmentsCount: assignments?.length, 
+            submissionsCount: submissions?.length 
+        });
+    }
+  }, [loading, batches, students, assignments, submissions]);
 
   const handleGradeSubmission = async (e) => {
     e.preventDefault();
@@ -155,7 +169,7 @@ const FacultyDashboard = () => {
             Faculty <span className="text-gradient">Command Center</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>
-             You have {submissions.filter(s => s.status === 'submitted').length} assignments pending review.
+             {Array.isArray(submissions) ? `You have ${submissions.filter(s => s?.status === 'submitted').length} assignments pending review.` : 'Loading submissions...'}
           </p>
         </div>
         
@@ -200,7 +214,7 @@ const FacultyDashboard = () => {
             <Link to="/faculty/create-batch" style={{ textDecoration: 'none' }}>
               <div className="card stat-card" style={{ textAlign: 'center', padding: '1.25rem', borderColor: 'var(--primary)', background: '#4f46e505' }}>
                 <Users size={24} color="var(--primary)" style={{ marginBottom: '0.5rem' }} />
-                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Manage Batches ({batches.length})</div>
+                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>Manage Batches ({batches?.length || 0})</div>
               </div>
             </Link>
             <Link to="/faculty/challenges" style={{ textDecoration: 'none' }}>
@@ -224,34 +238,35 @@ const FacultyDashboard = () => {
                   <TrendingUp size={20} color="var(--primary)" /> Action Required: Grading
                 </h3>
             </div>
-            <div>
-              {submissions.filter(s => s.status === 'submitted').slice(0, 5).map((sub, i) => (
-                 <div key={sub.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-                     <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#4f46e510', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.25rem' }}>
-                          {sub.student_name?.[0] || 'S'}
+              <div>
+                {(Array.isArray(submissions) && submissions.length > 0) ? (
+                  submissions.filter(s => s?.status === 'submitted').slice(0, 5).map((sub, i) => (
+                    <div key={sub.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: i !== 4 ? '1px solid var(--border)' : 'none' }}>
+                        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                           <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#4f46e510', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.25rem' }}>
+                             {sub.student_name?.[0] || 'S'}
+                           </div>
+                           <div>
+                             <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-main)' }}>{sub.student_name}</div>
+                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{sub.assignment_title}</div>
+                           </div>
                         </div>
-                        <div>
-                          <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-main)' }}>{sub.student_name}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{sub.assignment_title}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                           <button onClick={() => setGradingSubmission(sub)} style={{ borderRadius: '8px', padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#4f46e515', color: 'var(--primary)', fontWeight: '700' }}>
+                              Grade Now
+                           </button>
                         </div>
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{new Date(sub.submitted_at).toLocaleDateString()}</span>
-                        <button onClick={() => setGradingSubmission(sub)} style={{ borderRadius: '8px', padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#4f46e515', color: 'var(--primary)', fontWeight: '700' }}>
-                           Grade Now
-                        </button>
-                     </div>
-                 </div>
-              ))}
-              {submissions.filter(s => s.status === 'submitted').length === 0 && (
-                <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                   <CheckCircle size={48} style={{ color: 'var(--success)', marginBottom: '1rem', opacity: 0.5 }} />
-                   <h3 style={{ margin: 0, color: 'var(--text-main)' }}>All Clear!</h3>
-                   <p style={{ color: 'var(--text-muted)' }}>No assignments are waiting for review.</p>
-                </div>
-              )}
-            </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+                    <CheckCircle size={48} style={{ color: 'var(--success)', marginBottom: '1rem', opacity: 0.5 }} />
+                    <h3 style={{ margin: 0, color: 'var(--text-main)' }}>All Clear!</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>No assignments are waiting for review.</p>
+                  </div>
+                )}
+              </div>
           </div>
 
           {/* AI Recommended Teaching Insight */}
