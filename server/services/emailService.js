@@ -3,8 +3,8 @@ require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: 465, // Enforce 465 to bypass cloud strict firewalls (like Vercel/Render)
-  secure: true, // Auto-enable TLS for port 465
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: process.env.SMTP_SECURE === 'true' ? true : false,
   auth: {
     user: process.env.SMTP_USER || 'indrajitkshirsagar128@gmail.com',
     pass: process.env.SMTP_PASS || 'ysxdzysuldanoipz',
