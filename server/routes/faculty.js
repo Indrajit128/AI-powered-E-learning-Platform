@@ -276,5 +276,90 @@ router.get('/submissions', auth, facultyOnly, async (req, res) => {
     }
 });
 
-module.exports = router;
+// @route   GET /api/faculty/assignment-progress/:id
+// @desc    Get detailed progress (who completed, who pending) for an assignment
+router.get('/assignment-progress/:id', auth, facultyOnly, async (req, res) => {
+    try {
+        const assignmentId = req.params.id;
 
+        // 1. Get Assignment Details
+        const { data: assignment, error: assignmentError } = await supabase
+            .from('assignments')
+            .select('*')
+            .eq('id', assignmentId)
+            .single();
+        
+        if (assignmentError || !assignment) return res.status(404).json({ msg: 'Assignment not found' });
+
+        // 2. Get Targets
+        const { data: targets, error: targetsError } = await supabase
+            .from('assignment_targets')
+            .select('batch_id, student_id')
+            .eq('assignment_id', assignmentId);
+        
+        if (targetsError) throw targetsError;
+
+        // 3. Resolve all unique student IDs from targets
+        let targetedStudentIds = new Set();
+        
+        for (const target of targets) {
+            if (target.student_id) {
+                targetedStudentIds.add(target.student_id);
+            } else if (target.batch_id) {
+                const { data: batchStudents } = await supabase
+                    .from('batch_students')
+                    .select('student_id')
+                    .eq('batch_id', target.batch_id);
+                
+                (batchStudents || []).forEach(bs => targetedStudentIds.add(bs.student_id));
+            }
+        }
+
+        if (targetedStudentIds.size === 0) return res.json({ assignment, students: [] });
+
+        // 4. Fetch Student details and Submissions
+        const { data: students, error: studentsError } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .in('id', Array.from(targetedStudentIds));
+        
+        if (studentsError) throw studentsError;
+
+        const { data: submissions, error: submissionsError } = await supabase
+            .from('submissions')
+            .select('*')
+            .eq('assignment_id', assignmentId);
+        
+        if (submissionsError) throw submissionsError;
+
+        // 5. Build the final response
+        const progress = students.map(student => {
+            const submission = submissions.find(s => s.student_id === student.id);
+            return {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                status: submission ? (submission.status || 'submitted') : 'pending',
+                submitted_at: submission ? submission.submitted_at : null,
+                grade: submission ? submission.grade : null,
+                submission_id: submission ? submission.id : null
+            };
+        });
+
+        res.json({
+            assignment,
+            stats: {
+                total: progress.length,
+                completed: progress.filter(p => p.status !== 'pending').length,
+                pending: progress.filter(p => p.status === 'pending').length
+            },
+            students: progress
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+module.exports = router;

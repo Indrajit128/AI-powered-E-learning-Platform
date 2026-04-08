@@ -349,6 +349,43 @@ const FacultyDashboard = () => {
         </div>
       </div>
 
+      {/* Assignment Tracker Section - NEW */}
+      <section className="card" style={{ marginTop: '2.5rem', padding: '0', overflow: 'hidden' }}>
+        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+           <h3 style={{ margin: 0, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ClipboardList color="var(--primary)" size={22} /> Managed Assignments History
+           </h3>
+           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Total: {assignments?.length || 0}</div>
+        </div>
+        <div className="custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+           {Array.isArray(assignments) && assignments.length > 0 ? (
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1px', background: 'var(--border)' }}>
+               {assignments.map((asg) => (
+                 <div key={asg.id} className="hover-lift" style={{ background: 'white', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>{asg.subject}</div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800', lineHeight: 1.2 }}>{asg.title}</h4>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Calendar size={12} /> {asg.due_date ? new Date(asg.due_date).toLocaleDateString() : 'No date'}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => navigate(`/faculty/assignment-progress/${asg.id}`)}
+                      style={{ width: '100%', padding: '0.75rem', fontSize: '0.85rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--primary)', border: 'none' }}
+                    >
+                      VIEW PROGRESS <ChevronRight size={16} />
+                    </button>
+                 </div>
+               ))}
+             </div>
+           ) : (
+             <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No assignments found. Start by creating one!
+             </div>
+           )}
+        </div>
+      </section>
+
       {/* Grading Modal */}
       <AnimatePresence>
         {gradingSubmission && (
