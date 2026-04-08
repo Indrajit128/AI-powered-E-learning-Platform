@@ -4,7 +4,7 @@ require('dotenv').config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const generateAssignment = async (subject, type, level = 'beginner') => {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     let prompt = "";
 
@@ -12,7 +12,7 @@ const generateAssignment = async (subject, type, level = 'beginner') => {
         case 'quiz':
             prompt = `Generate 10 multiple-choice questions on ${subject} at ${level} level. 
             Format the output as a valid JSON array of objects, each with: 
-            "question", "options" (array of 4 strings), and "correctAnswer" (string, must match one of the options).`;
+            "question", "options" (array of 4 strings), and "correctAnswer" (integer, the 0-based index of the correct option).`;
             break;
         case 'crossword':
             prompt = `Generate data for a 5-word crossword puzzle about ${subject} (${level} level). 

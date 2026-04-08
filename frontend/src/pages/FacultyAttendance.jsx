@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Users, Search, Calendar, CheckSquare, XSquare, ShieldCheck, Download, Activity, Save, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -11,22 +12,23 @@ const FacultyAttendance = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Mocked API fetch for students
-    setTimeout(() => {
-      setStudents([
-        { id: 1, name: 'Alice Parker', email: 'alice@student.com' },
-        { id: 2, name: 'Bob Smith', email: 'bob@student.com' },
-        { id: 3, name: 'Charlie Davis', email: 'charlie@student.com' },
-        { id: 4, name: 'Diana Prince', email: 'diana@student.com' },
-        { id: 5, name: 'Evan Wright', email: 'evan@student.com' },
-      ]);
-      // Set all base as present initially
-      const initialLog = {
-        1: 'present', 2: 'present', 3: 'absent', 4: 'present', 5: 'absent'
-      };
-      setAttendanceLog(initialLog);
-      setLoading(false);
-    }, 1000);
+    const fetchStudents = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/faculty/students', {
+          headers: { 'x-auth-token': token }
+        });
+        setStudents(res.data);
+        const initialLog = {};
+        res.data.forEach(s => { initialLog[s.id] = 'present' });
+        setAttendanceLog(initialLog);
+      } catch (err) {
+        console.error('Error fetching students:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
   }, []);
 
   const toggleStatus = (id, status) => {
