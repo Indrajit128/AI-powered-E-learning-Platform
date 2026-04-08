@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
   port: 465, // Enforce 465 to bypass cloud strict firewalls (like Vercel/Render)
   secure: true, // Auto-enable TLS for port 465
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.SMTP_USER || 'indrajitkshirsagar128@gmail.com',
+    pass: process.env.SMTP_PASS || 'ysxdzysuldanoipz',
   },
   tls: {
     // do not fail on invalid certs
@@ -42,13 +42,6 @@ const sendOTP = async (email, otp) => {
   };
 
   try {
-    // If using placeholder credentials, mock the email sending
-    if (process.env.SMTP_USER === 'your_email@gmail.com' || !process.env.SMTP_USER) {
-      console.log(`⚠️ Mock Mode: By-passing email send.`);
-      console.log(`✅ MOCK OTP for ${email}: ${otp}`);
-      return;
-    }
-
     await transporter.sendMail(mailOptions);
     console.log(`✅ OTP sent to ${email}`);
   } catch (err) {
