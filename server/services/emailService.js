@@ -17,14 +17,14 @@ const transporter = nodemailer.createTransport({
 
 const sendOTP = async (email, otp) => {
   const mailOptions = {
-    from: `"EduERP Platform" <${process.env.SMTP_USER || 'indrajitkshirsagar128@gmail.com'}>`,  // Platform name instead of raw email
+    from: `"Mentordeskk" <${process.env.SMTP_USER || 'indrajitkshirsagar128@gmail.com'}>`,  // Platform name instead of raw email  // Platform name instead of raw email
     to: email,
-    subject: '🔐 Your EduERP Verification Code',
+    subject: '🔐 Your Mentordeskk Verification Code',
     html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f8fafc; border-radius: 16px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 32px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 800;">🎓 EduERP Platform</h1>
-          <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0; font-size: 14px;">AI-Powered E-Learning & ERP System</p>
+          <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 800;">🎓 Mentordeskk</h1>
+          <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0; font-size: 14px;">Mentordeskk & ERP System</p>
         </div>
         <div style="padding: 40px 32px;">
           <h2 style="color: #1e293b; margin: 0 0 16px 0;">Email Verification</h2>
@@ -35,7 +35,7 @@ const sendOTP = async (email, otp) => {
           <p style="color: #94a3b8; font-size: 13px; margin: 0;">If you didn't request this, please ignore this email. Never share your OTP with anyone.</p>
         </div>
         <div style="background: #f1f5f9; padding: 16px 32px; text-align: center;">
-          <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2026 EduERP Platform. All rights reserved.</p>
+          <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2026 Mentordeskk. All rights reserved.</p>
         </div>
       </div>
     `,

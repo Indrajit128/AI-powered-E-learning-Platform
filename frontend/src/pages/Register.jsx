@@ -92,7 +92,7 @@ const Register = ({ setUser }) => {
           {step === 'form' ? '✨ Create Account' : '📧 Verify Email'}
         </h2>
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-          {step === 'form' ? 'Join the EduERP platform today' : `OTP sent to ${email}`}
+          {step === 'form' ? 'Join Mentordeskk today' : `OTP sent to ${email}`}
         </p>
         
         {error && (
@@ -176,7 +176,7 @@ const Register = ({ setUser }) => {
               </div>
             </div>
             <button type="submit" disabled={loading || otp.length !== 6} style={{ width: '100%', marginTop: '1rem', opacity: (loading || otp.length !== 6) ? 0.7 : 1 }}>
-              {loading ? 'Verifying...' : '✓ Verify & Enter Platform'}
+              {loading ? 'Verifying...' : '✓ Verify & Enter Mentordeskk'}
             </button>
 
             {/* Resend OTP */}

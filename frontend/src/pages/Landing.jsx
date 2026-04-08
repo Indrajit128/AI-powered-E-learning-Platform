@@ -24,7 +24,7 @@ const Landing = () => {
         {/* Navigation */}
         <nav className="landing-nav">
           <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em' }}>
-            Learn<span style={{ color: 'var(--text-main)' }}>AI</span>
+            Mentor<span style={{ color: 'var(--text-main)' }}>deskk</span>
           </div>
           <div className="auth-buttons">
             <Link to="/login" className="login-link">Login</Link>
@@ -93,7 +93,7 @@ const Landing = () => {
                 lineHeight: '1.7',
                 fontWeight: '450'
               }}>
-                The first full-stack E-learning platform that generates assignments, 
+                The first full-stack Mentordeskk platform that generates assignments, 
                 quizzes, and coding challenges instantly using Google Gemini. 
                 Designed for forward-thinking Faculty and ambitious Students.
               </p>
@@ -140,7 +140,7 @@ const Landing = () => {
               }}>
                  <img 
                    src="/elearning_hero_image.png" 
-                   alt="AI E-Learning Dashboard" 
+                   alt="Mentordeskk Dashboard" 
                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                  />
               </div>
@@ -293,11 +293,11 @@ const Landing = () => {
           position: 'relative'
         }}>
           <div style={{ marginBottom: '2rem' }}>
-            <strong style={{ color: 'var(--primary)', fontSize: '1.5rem' }}>LearnAI</strong>
-            <p style={{ marginTop: '0.5rem' }}>The Future of E-Learning, Today.</p>
+            <strong style={{ color: 'var(--primary)', fontSize: '1.5rem' }}>Mentordeskk</strong>
+            <p style={{ marginTop: '0.5rem' }}>The Future of Learning with Mentordeskk.</p>
           </div>
           <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>
-            &copy; 2026 AI E-Learning Platform. Built with passion for excellence.
+            &copy; 2026 Mentordeskk. Built with passion for excellence.
           </div>
         </footer>
       </div>

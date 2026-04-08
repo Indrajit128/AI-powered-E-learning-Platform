@@ -43,3 +43,46 @@ CREATE POLICY "Allow creators to update" ON coding_challenges FOR UPDATE USING (
 -- Polices for challenge_submissions
 CREATE POLICY "Allow users to see their own submissions" ON challenge_submissions FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Allow users to insert their own submissions" ON challenge_submissions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Additional tables for coding question engine (attempts, questions, submissions)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS coding_questions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  difficulty TEXT,
+  topic TEXT,
+  description TEXT,
+  constraints TEXT[],
+  input_format TEXT,
+  output_format TEXT,
+  sample_test_cases JSONB,
+  hidden_test_cases JSONB,
+  starter_code JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS coding_attempts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID,
+  question_id UUID REFERENCES coding_questions(id) ON DELETE CASCADE,
+  language TEXT,
+  code TEXT,
+  output TEXT,
+  status TEXT,
+  execution_time FLOAT,
+  memory FLOAT,
+  passed_test_cases INT,
+  total_test_cases INT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS coding_submissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  attempt_id UUID REFERENCES coding_attempts(id) ON DELETE CASCADE,
+  test_case_input TEXT,
+  expected_output TEXT,
+  actual_output TEXT,
+  passed BOOLEAN
+);
+

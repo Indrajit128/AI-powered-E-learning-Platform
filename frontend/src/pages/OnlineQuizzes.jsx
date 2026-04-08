@@ -33,7 +33,7 @@ const OnlineQuizzes = () => {
           Assessment <span className="text-gradient">Center</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>
-          Evaluate your understanding with AI-powered quizzes.
+          Evaluate your understanding with Mentordeskk quizzes.
         </p>
       </div>
 

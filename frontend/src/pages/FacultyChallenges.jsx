@@ -52,7 +52,7 @@ const FacultyChallenges = () => {
             });
             setChallenges([res.data, ...challenges]);
             setPreviewChallenge(null);
-            alert('Challenge saved to platform! 🚀');
+            alert('Challenge saved to Mentordeskk! 🚀');
         } catch (err) {
             console.error('Save failed:', err);
         }

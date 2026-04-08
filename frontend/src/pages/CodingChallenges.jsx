@@ -57,7 +57,7 @@ const CodingChallenges = () => {
                     <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
                         Coding <span className="text-gradient">Arena</span>
                     </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Master your coding skills with AI-powered challenges.</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Master your coding skills with Mentordeskk challenges.</p>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '1.5rem' }}>

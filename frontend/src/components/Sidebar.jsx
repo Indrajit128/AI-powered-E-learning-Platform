@@ -33,7 +33,7 @@ const Sidebar = ({ user, logout, isOpen, setIsOpen }) => {
       <div className={`sidebar-container ${isOpen ? 'open' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1rem' }}>
           <div className="logo" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>
-            LearnAI
+            Mentordeskk
           </div>
           {isOpen && (
             <button className="mobile-menu-btn" onClick={() => setIsOpen(false)}>

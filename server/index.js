@@ -20,7 +20,7 @@ app.use(express.json());
 
 // Routes
 app.get("/", (req, res) => {
-    res.send("Welcome to AI-Powered E-Learning Backend 🎓");
+    res.send("Welcome to Mentordeskk Backend 🎓");
 });
 
 app.get("/api", (req, res) => {
@@ -35,6 +35,8 @@ app.use('/api/student', require('./routes/student'));
 app.use('/api/batch', require('./routes/batch'));
 app.use('/api/challenges', require('./routes/challenges'));
 app.use('/api/submissions', require('./routes/submissions'));
+app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/code', require('./routes/codeRoutes'));
 
 // Socket.io Connection
 io.on('connection', (socket) => {
