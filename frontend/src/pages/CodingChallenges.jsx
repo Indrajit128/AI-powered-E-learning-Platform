@@ -1,93 +1,135 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Code, ChevronRight, Clock, Star, Trophy } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Search, Filter, Code, Info, CheckCircle, Database, Layout, BookOpen, User, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ChallengeCard from '../components/ChallengeCard';
 
 const CodingChallenges = () => {
-  const [challenges, setChallenges] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const [challenges, setChallenges] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [difficulty, setDifficulty] = useState('All');
+    const [topic, setTopic] = useState('All');
+    const [stats, setStats] = useState({ solved: 0, attempted: 0, points: 0, accuracy: 0 });
 
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        // In a real app, this would be a filtered API call
-        const res = await axios.get('/api/student/assignments/batch_0', { // Using mock batch_0
-          headers: { 'x-auth-token': token }
+    const topics = ['All', 'Arrays', 'Strings', 'Recursion', 'DP', 'OOP', 'SQL', 'JavaScript', 'Python'];
+    const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
+
+    useEffect(() => {
+        const fetchChallenges = async () => {
+            try {
+                const res = await axios.get('/api/challenges');
+                setChallenges(res.data);
+                
+                // Fetch stats (mock for now or from submissions)
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    const subRes = await axios.get(`/api/submissions/user/${user.id}`);
+                    const solved = subRes.data.filter(s => s.status === 'Passed').length;
+                    const attempted = subRes.data.length;
+                    const points = solved * 100;
+                    const accuracy = attempted > 0 ? (solved / attempted) * 100 : 0;
+                    setStats({ solved, attempted, points, accuracy: Math.round(accuracy) });
+                }
+            } catch (err) {
+                console.error('Error fetching challenges:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchChallenges();
+    }, []);
+
+    const filteredChallenges = useMemo(() => {
+        return challenges.filter(c => {
+            const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesDiff = difficulty === 'All' || c.difficulty === difficulty;
+            const matchesTopic = topic === 'All' || (c.tags && c.tags.includes(topic));
+            return matchesSearch && matchesDiff && matchesTopic;
         });
-        const codingTasks = res.data.filter(a => a.type === 'coding');
-        setChallenges(codingTasks);
-      } catch (err) {
-        console.error('Error fetching coding challenges:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchChallenges();
-  }, []);
+    }, [challenges, searchTerm, difficulty, topic]);
 
-  return (
-    <div className="fade-in">
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
-          Coding <span className="text-gradient">Arena</span>
-        </h1>
-        <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>
-          Sharpen your skills with AI-generated programming challenges.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-        {loading ? (
-          <p>Loading challenges...</p>
-        ) : challenges.length === 0 ? (
-          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem' }}>
-            <Code size={64} style={{ color: 'var(--border)', marginBottom: '1.5rem' }} />
-            <h3>No coding challenges available</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Check back later for new programming tasks.</p>
-          </div>
-        ) : (
-          challenges.map((challenge, i) => (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              key={challenge.id} 
-              className="card stat-card"
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <div style={{ padding: '10px', background: '#4f46e515', borderRadius: '12px', color: 'var(--primary)' }}>
-                  <Code size={24} />
+    return (
+        <div className="fade-in" style={{ padding: '2rem' }}>
+            {/* Header / Stats */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
+                        Coding <span className="text-gradient">Arena</span>
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)' }}>Master your coding skills with AI-powered challenges.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <Star size={14} fill="var(--warning)" color="var(--warning)" />
-                  <Star size={14} fill="var(--warning)" color="var(--warning)" />
-                  <Star size={14} fill="var(--border)" color="var(--border)" />
+                
+                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                    <div className="card" style={{ padding: '0.75rem 1.5rem', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>{stats.solved}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#666', textTransform: 'uppercase' }}>Solved</div>
+                    </div>
+                    <div className="card" style={{ padding: '0.75rem 1.5rem', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>{stats.points}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#666', textTransform: 'uppercase' }}>XP Points</div>
+                    </div>
+                    <div className="card" style={{ padding: '0.75rem 1.5rem', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{stats.accuracy}%</div>
+                        <div style={{ fontSize: '0.75rem', color: '#666', textTransform: 'uppercase' }}>Accuracy</div>
+                    </div>
                 </div>
-              </div>
-              
-              <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>{challenge.title}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {challenge.subject} - AI generated challenge to test your logic and syntax.
-              </p>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> 45 Mins</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Trophy size={14} /> 100 Pts</span>
-              </div>
+            {/* Filter Bar */}
+            <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+                    <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="Search challenges..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', padding: '10px 10px 10px 40px', borderRadius: '10px', border: '1px solid #ddd' }}
+                    />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <Filter size={18} color="#666" />
+                    <select 
+                        value={difficulty} 
+                        onChange={(e) => setDifficulty(e.target.value)}
+                        style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ddd' }}
+                    >
+                        {difficulties.map(d => <option key={d} value={d}>{d} Difficulty</option>)}
+                    </select>
+                    
+                    <select 
+                        value={topic} 
+                        onChange={(e) => setTopic(e.target.value)}
+                        style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ddd' }}
+                    >
+                        {topics.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
+            </div>
 
-              <Link to={`/student/attempt/${challenge.id}`}>
-                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  Solve Challenge <ChevronRight size={18} />
-                </button>
-              </Link>
-            </motion.div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+            {/* Challenges Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {loading ? (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}>
+                        <div className="spinner" style={{ margin: '0 auto 1rem' }} />
+                        <p>Loading the arena...</p>
+                    </div>
+                ) : filteredChallenges.length > 0 ? (
+                    filteredChallenges.map((challenge, idx) => (
+                        <ChallengeCard key={challenge.id} challenge={challenge} index={idx} />
+                    ))
+                ) : (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', background: '#f9f9f9', borderRadius: '20px' }}>
+                        <Info size={48} color="#ccc" style={{ marginBottom: '1rem' }} />
+                        <h3>No challenges found</h3>
+                        <p>Try adjusting your search or filters.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default CodingChallenges;

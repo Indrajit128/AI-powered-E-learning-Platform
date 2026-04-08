@@ -38,6 +38,13 @@ const sendOTP = async (email, otp) => {
   };
 
   try {
+    // If using placeholder credentials, mock the email sending
+    if (process.env.SMTP_USER === 'your_email@gmail.com' || !process.env.SMTP_USER) {
+      console.log(`⚠️ Mock Mode: By-passing email send.`);
+      console.log(`✅ MOCK OTP for ${email}: ${otp}`);
+      return;
+    }
+
     await transporter.sendMail(mailOptions);
     console.log(`✅ OTP sent to ${email}`);
   } catch (err) {
