@@ -71,7 +71,14 @@ const generateAssignment = async (subject, type, level = 'beginner') => {
         return JSON.parse(jsonString);
 
     } catch (err) {
-        console.error('AI Service Error:', err.response?.data || err.message);
+        if (err.response) {
+            console.error('AI Service API Error:', {
+                status: err.response.status,
+                data: err.response.data
+            });
+        } else {
+            console.error('AI Service System Error:', err.message);
+        }
         throw err;
     }
 };

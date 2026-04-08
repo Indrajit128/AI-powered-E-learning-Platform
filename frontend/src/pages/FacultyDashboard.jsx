@@ -9,6 +9,7 @@ import {
   Clock, 
   CheckCircle, 
   AlertCircle,
+  Activity,
   BarChart3,
   ChevronRight,
   MoreVertical,
