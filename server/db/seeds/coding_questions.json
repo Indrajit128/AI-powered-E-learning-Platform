@@ -439,5 +439,203 @@
     "time_complexity": "N/A",
     "space_complexity": "O(H) where H is the number of then handlers",
     "tags": ["JavaScript fundamentals", "Asynchronous"]
+  },
+  {
+    "title": "Reverse Linked List",
+    "difficulty": "Easy",
+    "description": "Reverse a singly linked list.",
+    "constraints": "The number of nodes is in the range [0, 5000]. -1000 <= Node.val <= 1000.",
+    "input_format": "A linked list represented as an array of node values.",
+    "output_format": "Linked list reversed (array representation).",
+    "test_cases": [
+      { "input": "[1,2,3,4,5]", "output": "[5,4,3,2,1]", "hidden": false },
+      { "input": "[1,2]", "output": "[2,1]", "hidden": false },
+      { "input": "[]", "output": "[]", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[1]", "output": "[1]" }
+    ],
+    "starter_code_js": "function reverseList(head) {\n  // head represented as array for the exercise harness\n}",
+    "starter_code_py": "class Solution:\n    def reverseList(self, head: Optional[List[int]]) -> Optional[List[int]]:\n        pass",
+    "optimal_solution": "Iteratively reverse pointers using prev/current variables. For array representation reverse the array in-place.",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(1)",
+    "tags": ["Linked List"]
+  },
+  {
+    "title": "Detect Cycle in Linked List",
+    "difficulty": "Medium",
+    "description": "Given head, determine if the linked list has a cycle in it.",
+    "constraints": "The number of nodes is in the range [0, 10^4].",
+    "input_format": "A linked list (array form) with optional cycle indicator; for testing, input is array and an index where tail connects (-1 if none).",
+    "output_format": "Boolean indicating presence of cycle.",
+    "test_cases": [
+      { "input": "[3,2,0,-4], 1", "output": "true", "hidden": false },
+      { "input": "[1,2], -1", "output": "false", "hidden": false },
+      { "input": "[] , -1", "output": "false", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[1], 0", "output": "true" }
+    ],
+    "starter_code_js": "function hasCycle(head) {\n  // implement Floyd's cycle detection\n}",
+    "starter_code_py": "class Solution:\n    def hasCycle(self, head: Optional[List[int]]) -> bool:\n        pass",
+    "optimal_solution": "Use Floyd's Tortoise and Hare (fast/slow pointers) to detect a cycle in O(N) time and O(1) space.",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(1)",
+    "tags": ["Linked List", "Two Pointers"]
+  },
+  {
+    "title": "Number of Islands",
+    "difficulty": "Medium",
+    "description": "Given a 2D grid map of '1's (land) and '0's (water), count the number of islands.",
+    "constraints": "m == grid.length, n == grid[i].length, 1 <= m, n <= 300.",
+    "input_format": "2D grid as nested arrays of '1' and '0'.",
+    "output_format": "Integer count of islands.",
+    "test_cases": [
+      { "input": "[[\"1\",\"1\",\"0\"],[\"1\",\"0\",\"0\"],[\"0\",\"0\",\"1\"]]", "output": "2", "hidden": false },
+      { "input": "[[\"1\"]]", "output": "1", "hidden": false },
+      { "input": "[[\"0\"]]", "output": "0", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[[\"1\",\"1\"],[\"1\",\"1\"]]", "output": "1" }
+    ],
+    "starter_code_js": "function numIslands(grid) {\n  // use DFS/BFS to mark visited land\n}",
+    "starter_code_py": "class Solution:\n    def numIslands(self, grid: List[List[str]]) -> int:\n        pass",
+    "optimal_solution": "DFS/BFS flood fill marking visited cells; count root calls.",
+    "time_complexity": "O(M*N)",
+    "space_complexity": "O(M*N) (visited) or O(min(M,N)) recursion depth",
+    "tags": ["Graph", "DFS", "BFS"]
+  },
+  {
+    "title": "Course Schedule (Topological Sort)",
+    "difficulty": "Medium",
+    "description": "There are numCourses labeled from 0 to numCourses-1 and prerequisites pairs; determine if you can finish all courses.",
+    "constraints": "1 <= numCourses <= 10^5. prerequisites.length <= 10^5.",
+    "input_format": "An integer numCourses and an array of prerequisite pairs.",
+    "output_format": "Boolean indicating if a topological ordering exists.",
+    "test_cases": [
+      { "input": "2, [[1,0]]", "output": "true", "hidden": false },
+      { "input": "2, [[1,0],[0,1]]", "output": "false", "hidden": false },
+      { "input": "3, [[1,0],[2,1]]", "output": "true", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "1, []", "output": "true" }
+    ],
+    "starter_code_js": "function canFinish(numCourses, prerequisites) {\n  // Kahn's algorithm (BFS) or DFS cycle detection\n}",
+    "starter_code_py": "class Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        pass",
+    "optimal_solution": "Use Kahn's algorithm (indegree + queue) or DFS cycle detection to determine if DAG exists.",
+    "time_complexity": "O(N + E)",
+    "space_complexity": "O(N + E)",
+    "tags": ["Graph", "Topological Sort", "BFS"]
+  },
+  {
+    "title": "Sliding Window Maximum",
+    "difficulty": "Medium",
+    "description": "Given an array nums and a sliding window size k, return the maximum of each sliding window.",
+    "constraints": "1 <= nums.length <= 10^5. 1 <= k <= nums.length.",
+    "input_format": "An array nums and integer k.",
+    "output_format": "Array of maximums for each window.",
+    "test_cases": [
+      { "input": "[1,3,-1,-3,5,3,6,7], 3", "output": "[3,3,5,5,6,7]", "hidden": false },
+      { "input": "[1], 1", "output": "[1]", "hidden": false },
+      { "input": "[1,-1], 1", "output": "[1,-1]", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[9,11], 2", "output": "[11]" }
+    ],
+    "starter_code_js": "function maxSlidingWindow(nums, k) {\n  // use deque to maintain candidates\n}",
+    "starter_code_py": "class Solution:\n    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:\n        pass",
+    "optimal_solution": "Maintain a decreasing deque of indices; pop indices outside window and smaller elements.",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(k)",
+    "tags": ["Deque", "Queue", "Sliding Window"]
+  },
+  {
+    "title": "Binary Search (Iterative)",
+    "difficulty": "Easy",
+    "description": "Implement standard binary search to find target in a sorted array.",
+    "constraints": "1 <= nums.length <= 10^5. nums sorted in ascending order.",
+    "input_format": "A sorted array nums and integer target.",
+    "output_format": "Index of target or -1 if not found.",
+    "test_cases": [
+      { "input": "[-1,0,3,5,9,12], 9", "output": "4", "hidden": false },
+      { "input": "[-1,0,3,5,9,12], 2", "output": "-1", "hidden": false },
+      { "input": "[1], 1", "output": "0", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[1,2,3,4], 4", "output": "3" }
+    ],
+    "starter_code_js": "function binarySearch(nums, target) {\n  // iterative binary search\n}",
+    "starter_code_py": "class Solution:\n    def search(self, nums: List[int], target: int) -> int:\n        pass",
+    "optimal_solution": "Standard iterative binary search using left/right pointers and mid calculation.",
+    "time_complexity": "O(log N)",
+    "space_complexity": "O(1)",
+    "tags": ["Binary Search", "Searching"]
+  },
+  {
+    "title": "Kth Largest Element in an Array",
+    "difficulty": "Medium",
+    "description": "Find the kth largest element in an unsorted array.",
+    "constraints": "1 <= k <= nums.length <= 10^5.",
+    "input_format": "An array nums and integer k.",
+    "output_format": "The kth largest element.",
+    "test_cases": [
+      { "input": "[3,2,1,5,6,4], 2", "output": "5", "hidden": false },
+      { "input": "[3,2,3,1,2,4,5,5,6], 4", "output": "4", "hidden": false },
+      { "input": "[1], 1", "output": "1", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[2,1], 1", "output": "2" }
+    ],
+    "starter_code_js": "function findKthLargest(nums, k) {\n  // use quickselect or heap\n}",
+    "starter_code_py": "class Solution:\n    def findKthLargest(self, nums: List[int], k: int) -> int:\n        pass",
+    "optimal_solution": "Use Quickselect for average O(N) or maintain a min-heap of size k for O(N log k).",
+    "time_complexity": "O(N) average (Quickselect)",
+    "space_complexity": "O(1) or O(k)",
+    "tags": ["Sorting", "Selection", "Heap"]
+  },
+  {
+    "title": "Longest Consecutive Sequence",
+    "difficulty": "Hard",
+    "description": "Given an unsorted array of integers, return the length of the longest consecutive elements sequence.",
+    "constraints": "0 <= nums.length <= 10^5.",
+    "input_format": "An array of integers.",
+    "output_format": "Length of longest consecutive sequence.",
+    "test_cases": [
+      { "input": "[100,4,200,1,3,2]", "output": "4", "hidden": false },
+      { "input": "[]", "output": "0", "hidden": false },
+      { "input": "[1,2,0,1]", "output": "3", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[9,1,4,7,3,-1,0,5,8,-1,6]", "output": "7" }
+    ],
+    "starter_code_js": "function longestConsecutive(nums) {\n  // use a hash set to expand sequences\n}",
+    "starter_code_py": "class Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n        pass",
+    "optimal_solution": "Use a hash set: for each number that is the start of sequence (num-1 not in set), expand forward counting length.",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(N)",
+    "tags": ["Hash Table", "Set"]
+  },
+  {
+    "title": "Jump Game",
+    "difficulty": "Medium",
+    "description": "Given an array of non-negative integers, you are initially positioned at the first index of the array. Each element represents your maximum jump length at that position. Determine if you are able to reach the last index.",
+    "constraints": "1 <= nums.length <= 10^4. 0 <= nums[i] <= 10^5.",
+    "input_format": "An array nums.",
+    "output_format": "Boolean indicating if last index is reachable.",
+    "test_cases": [
+      { "input": "[2,3,1,1,4]", "output": "true", "hidden": false },
+      { "input": "[3,2,1,0,4]", "output": "false", "hidden": false },
+      { "input": "[0]", "output": "true", "hidden": false }
+    ],
+    "hidden_test_cases": [
+      { "input": "[2,0]", "output": "true" }
+    ],
+    "starter_code_js": "function canJump(nums) {\n  // greedy: track farthest reachable index\n}",
+    "starter_code_py": "class Solution:\n    def canJump(self, nums: List[int]) -> bool:\n        pass",
+    "optimal_solution": "Greedy: iterate and keep the farthest reachable index; if index exceeds farthest return false.",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(1)",
+    "tags": ["Greedy", "Array"]
   }
 ]

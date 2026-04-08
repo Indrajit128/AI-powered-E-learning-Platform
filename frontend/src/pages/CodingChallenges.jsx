@@ -12,7 +12,7 @@ const CodingChallenges = () => {
     const [topic, setTopic] = useState('All');
     const [stats, setStats] = useState({ solved: 0, attempted: 0, points: 0, accuracy: 0 });
 
-    const topics = ['All', 'Arrays', 'Strings', 'Recursion', 'DP', 'OOP', 'SQL', 'JavaScript', 'Python'];
+    const topics = ['All', 'Arrays', 'Strings', 'Recursion', 'Dynamic Programming', 'Graph', 'Stack', 'Queue', 'Binary Tree', 'Linked List', 'Searching', 'Sorting', 'Hashing', 'Greedy Algorithm', 'Sliding Window', 'Two Pointer'];
     const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 
     useEffect(() => {

@@ -8,6 +8,7 @@ const FacultyChallenges = () => {
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
     const [genConfig, setGenConfig] = useState({ topic: 'Arrays', difficulty: 'Easy' });
+    const dsaTopics = ['Arrays', 'Strings', 'Recursion', 'Dynamic Programming', 'Graph', 'Stack', 'Queue', 'Binary Tree', 'Linked List', 'Searching', 'Sorting', 'Hashing', 'Greedy Algorithm', 'Sliding Window', 'Two Pointer'];
     const [showGenModal, setShowGenModal] = useState(false);
     const [previewChallenge, setPreviewChallenge] = useState(null);
 
@@ -176,13 +177,16 @@ const FacultyChallenges = () => {
                             <form onSubmit={handleGenerateAI}>
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#666' }}>Target Topic</label>
-                                    <input 
-                                        type="text" 
+                                    <select 
                                         value={genConfig.topic}
                                         onChange={(e) => setGenConfig({...genConfig, topic: e.target.value})}
                                         style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #ddd' }}
                                         required
-                                    />
+                                    >
+                                        {dsaTopics.map(t => (
+                                            <option key={t} value={t}>{t}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div style={{ marginBottom: '2rem' }}>
                                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#666' }}>Difficulty</label>
